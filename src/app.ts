@@ -5,6 +5,13 @@ import { ConnectDatabase } from "./database";
 import appRouter from "./router/router";
 import cors from "cors";
 
+// import crypto from "crypto";
+
+// const secret1 = crypto.randomBytes(64).toString("hex");
+// const secret2 = crypto.randomBytes(64).toString("hex");
+
+// console.log({ secret1, secret2 });
+
 dotenv.config();
 
 ConnectDatabase();

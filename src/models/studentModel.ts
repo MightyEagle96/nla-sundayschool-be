@@ -1,6 +1,8 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import bcrypt from "bcrypt";
+import { Request } from "express";
 export interface IStudent {
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
   email: string;
@@ -11,6 +13,10 @@ export interface IStudent {
   className: string;
   title: string;
   gender: string;
+}
+
+export interface AuthenticatedStudent extends Request {
+  student: Partial<IStudent>;
 }
 
 const studentSchema = new Schema<IStudent>(
