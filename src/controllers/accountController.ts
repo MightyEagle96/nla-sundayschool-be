@@ -1,10 +1,15 @@
 //Create Account
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import { IStudent, StudentModel } from "../models/studentModel";
+import {
+  AuthenticatedStudent,
+  IStudent,
+  StudentModel,
+} from "../models/studentModel";
 import { ConcurrentJobQueue } from "../utils/DataQueue";
 import { sendEmailFunc } from "../utils/mailController";
 import { notificationEmailTemplate } from "./emailTemplate";
+import { generateRefreshToken, generateToken, tokens } from "./jwtController";
 
 const queue = new ConcurrentJobQueue(4, 10);
 export const createAccount = async (req: Request, res: Response) => {
@@ -67,13 +72,35 @@ export const loginAccount = async (req: Request, res: Response) => {
 
   bcrypt.compare(body.password, existing.password).then((result) => {
     if (result) {
-      res.send("Account logged in successfully");
+      const accessToken = generateToken({
+        _id: existing._id,
+        email: existing.email,
+      });
+
+      const refreshToken = generateRefreshToken({
+        _id: existing._id,
+        email: existing.email,
+      });
+      // res.send("Account logged in successfully");
+      res
+        .cookie(tokens.auth_token, accessToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60, // 1h
+        })
+        .cookie(tokens.refresh_token, refreshToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+        })
+        .send("Logged In");
     } else {
       res.status(400).send("Invalid credentials");
     }
   });
 };
-//Logout
 
 //Change Password
 
@@ -90,3 +117,21 @@ export const loginAccount = async (req: Request, res: Response) => {
 //Update Account
 
 //Get Account
+export const myProfile = async (req: AuthenticatedStudent, res: Response) => {
+  res.send(req.student);
+};
+
+//Logout
+export const logout = async (req: Request, res: Response) => {
+  res.clearCookie(tokens.auth_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  res.clearCookie(tokens.refresh_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  res.send("Logged Out");
+};

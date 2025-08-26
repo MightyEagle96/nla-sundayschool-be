@@ -4,11 +4,12 @@ import dotenv from "dotenv";
 import { ConnectDatabase } from "./database";
 import appRouter from "./router/router";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 // import crypto from "crypto";
 
-// const secret1 = crypto.randomBytes(64).toString("hex");
-// const secret2 = crypto.randomBytes(64).toString("hex");
+// const secret1 = crypto.randomBytes(256).toString("base64");
+// const secret2 = crypto.randomBytes(256).toString("base64");
 
 // console.log({ secret1, secret2 });
 
@@ -17,11 +18,26 @@ dotenv.config();
 ConnectDatabase();
 const app = express();
 
+const whitelist = ["http://192.168.137.1:5173", "http://localhost:5173"];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || whitelist.includes(origin)) {
+      callback(null, true); // Allow request
+    } else {
+      callback(new Error("Not allowed by CORS")); // Block request
+    }
+  },
+  credentials: true, // If you use cookies/sessions
+};
+
 app
 
   .use(morgan("dev"))
 
-  .use(cors())
+  .use(cookieParser())
+
+  .use(cors(corsOptions))
 
   .use(express.json({ limit: "50mb" }))
 

@@ -16,7 +16,8 @@ export interface IStudent {
 }
 
 export interface AuthenticatedStudent extends Request {
-  student: Partial<IStudent>;
+  //  student: Partial<IStudent>;
+  student?: IStudent;
 }
 
 const studentSchema = new Schema<IStudent>(
