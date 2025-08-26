@@ -10,6 +10,7 @@ const database_1 = require("./database");
 const router_1 = __importDefault(require("./router/router"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const path = require("path");
 // import crypto from "crypto";
 // const secret1 = crypto.randomBytes(256).toString("base64");
 // const secret2 = crypto.randomBytes(256).toString("base64");
@@ -17,7 +18,11 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 dotenv_1.default.config();
 (0, database_1.ConnectDatabase)();
 const app = (0, express_1.default)();
-const whitelist = ["http://192.168.137.1:5173", "http://localhost:5173"];
+const whitelist = [
+    "http://192.168.137.1:5173",
+    "http://localhost:5173",
+    "http://localhost:4000",
+];
 const corsOptions = {
     origin: (origin, callback) => {
         if (!origin || whitelist.includes(origin)) {
@@ -34,7 +39,11 @@ app
     .use((0, cookie_parser_1.default)())
     .use((0, cors_1.default)(corsOptions))
     .use(express_1.default.json({ limit: "50mb" }))
+    .use(express_1.default.static(path.join(__dirname, "client")))
     .use("/api", router_1.default)
+    .get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "client", "index.html"));
+})
     .listen(4000, "0.0.0.0", () => {
     console.log("App is listening");
 });

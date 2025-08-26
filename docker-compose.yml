@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    container_name: my-node-app
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/mydb
+      - NODE_ENV=production
+    networks:
+      - mynet
+
+  mongodb:
+    image: mongo
+    container_name: my-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mynet
+
+volumes:
+  mongo_data:
+
+networks:
+  mynet:

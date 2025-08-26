@@ -17,11 +17,14 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const environment = process.env.NODE_ENV || "development";
-const databaseURI = (environment === "production"
-    ? process.env.PROD_DB_URI
-    : process.env.DEV_DB_URI);
+// const databaseURI = (
+//   environment === "production"
+//     ? process.env.PROD_DB_URI || "mongodb://mongodb:27017/sundayschool"
+//     : process.env.DEV_DB_URI || "mongodb://localhost:27017/sundayschool"
+// ) as string;
+const databaseURI = process.env.MONGO_URI;
 let isConnected = false;
-console.log({ databaseURI });
+// console.log({ databaseURI });
 const ConnectDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     if (isConnected)
         return;
