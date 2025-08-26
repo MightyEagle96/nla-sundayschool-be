@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.accountRouter = void 0;
+const express_1 = require("express");
+const accountController_1 = require("../controllers/accountController");
+const jwtController_1 = require("../controllers/jwtController");
+const accountRouter = (0, express_1.Router)();
+exports.accountRouter = accountRouter;
+accountRouter
+    .post("/register", accountController_1.createAccount)
+    .post("/login", accountController_1.loginAccount)
+    .get("/myprofile", jwtController_1.authenticateToken, accountController_1.myProfile)
+    .get("/logout", jwtController_1.authenticateToken, accountController_1.logout);
