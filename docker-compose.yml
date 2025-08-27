@@ -1,7 +1,8 @@
 services:
   app:
+    image: nla-sunday-school
     build: .
-    container_name: my-node-app
+    container_name: nla-sunday-school
     ports:
       - "4000:4000"
     depends_on:
@@ -9,6 +10,7 @@ services:
     environment:
       - MONGO_URI=mongodb://mongodb:27017/mydb
       - NODE_ENV=production
+      - PORT=4000
     networks:
       - mynet
 
