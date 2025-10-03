@@ -9,56 +9,82 @@ import {
 import { ConcurrentJobQueue } from "../utils/DataQueue";
 import { sendEmailFunc } from "../utils/mailController";
 import { notificationEmailTemplate } from "./emailTemplate";
-import { generateRefreshToken, generateToken, tokens } from "./jwtController";
+import {
+  generateRefreshToken,
+  generateToken,
+  JointInterface,
+  tokens,
+} from "./jwtController";
 
-const queue = new ConcurrentJobQueue(4, 10);
-export const createAccount = async (req: Request, res: Response) => {
-  try {
-    const body: IStudent = req.body;
+const accountQueue = new ConcurrentJobQueue(4, 10);
+// export const createAccount = async (req: Request, res: Response) => {
+//   try {
+//     const body: IStudent = req.body;
 
-    const existing = await StudentModel.findOne({
-      $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
-    });
+//     const existing = await StudentModel.findOne({
+//       $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
+//     });
 
-    if (existing) {
-      return res.status(400).send("Account already exists");
-    }
+//     if (existing) {
+//       return res.status(400).send("Account already exists");
+//     }
 
-    res.send("Account is being created");
-    queue
-      .enqueue(async () => {
-        const student = new StudentModel(body);
-        await student.save();
+//     res.send("Account is being created");
+//     queue
+//       .enqueue(async () => {
+//         const student = new StudentModel(body);
+//         await student.save();
 
-        const activationLink = `http://localhost:5173/activate/${student._id}`;
+//         const activationLink = `http://localhost:5173/activate/${student._id}`;
 
-        await sendEmailFunc(
-          student.email,
-          "Activate your account",
-          notificationEmailTemplate(
-            `${student.firstName} ${student.lastName}`,
-            activationLink
-          )
-        );
-      })
-      .then(() => {
-        // res.status(200).send("Account created successfully");
-      })
-      .catch((err) => {
-        console.error("Queue job failed:", err);
-        // res.status(500).send("Error creating account");
-      });
-  } catch (error) {
-    console.error("Request error:", error);
-    res.status(500).send("Internal server error");
-  }
-};
+//         await sendEmailFunc(
+//           student.email,
+//           "Activate your account",
+//           notificationEmailTemplate(
+//             `${student.firstName} ${student.lastName}`,
+//             activationLink
+//           )
+//         );
+//       })
+//       .then(() => {
+//         // res.status(200).send("Account created successfully");
+//       })
+//       .catch((err) => {
+//         console.error("Queue job failed:", err);
+//         // res.status(500).send("Error creating account");
+//       });
+//   } catch (error) {
+//     console.error("Request error:", error);
+//     res.status(500).send("Internal server error");
+//   }
+// };
 
 //Verify Email
 
 //Verify Account
 
 //Login
+
+export const createAccount = async (req: Request, res: Response) => {
+  const existingAccount = await StudentModel.findOne({
+    email: req.body.email,
+  });
+
+  if (existingAccount) {
+    return res.status(400).send("Account already exists");
+  }
+
+  accountQueue.enqueue(async () => {
+    try {
+      await StudentModel.create(req.body);
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  res.send("Account created successfully");
+};
+
 export const loginAccount = async (req: Request, res: Response) => {
   const body: IStudent = req.body;
 
@@ -102,6 +128,17 @@ export const loginAccount = async (req: Request, res: Response) => {
   });
 };
 
+export const myProfile = async (req: JointInterface, res: Response) => {
+  res.send(req.student);
+};
+
+export const logoutAccount = async (req: JointInterface, res: Response) => {
+  res
+    .clearCookie(tokens.auth_token)
+    .clearCookie(tokens.refresh_token)
+    .send("Logged Out");
+};
+
 //Change Password
 
 //Delete Account
@@ -117,9 +154,6 @@ export const loginAccount = async (req: Request, res: Response) => {
 //Update Account
 
 //Get Account
-export const myProfile = async (req: AuthenticatedStudent, res: Response) => {
-  res.send(req.student);
-};
 
 //Logout
 export const logout = async (req: Request, res: Response) => {

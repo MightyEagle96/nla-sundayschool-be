@@ -9,7 +9,7 @@ export interface IStudent {
   password: string;
   isConfirmed: boolean;
   phoneNumber: string;
-  category: string;
+  classCategory: string;
   className: string;
   title: string;
   gender: string;
@@ -33,11 +33,11 @@ const studentSchema = new Schema<IStudent>(
     },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },
-    category: { type: String, required: true },
+    classCategory: { type: String, required: true },
     className: { type: String, required: true },
-    title: { type: String, required: true },
+    // title: { type: String, required: true },
     gender: { type: String, required: true },
-    password: { type: String, required: true, minlength: 8 }, // ✅ enforce length
+    password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
   },
   { timestamps: true }
 );

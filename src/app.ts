@@ -22,7 +22,7 @@ const app = express();
 const whitelist = [
   "http://192.168.137.1:5173",
   "http://localhost:5173",
-  "http://localhost:4000",
+  "http://localhost:3000",
 ];
 
 const corsOptions: cors.CorsOptions = {

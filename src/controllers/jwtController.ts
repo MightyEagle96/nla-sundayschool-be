@@ -26,39 +26,9 @@ export function generateRefreshToken(payload: object) {
   });
 }
 
-// Middleware to protect routes
-// export async function authenticateToken(
-//   req: AuthenticatedStudent,
-//   res: Response,
-//   next: NextFunction
-// ) {
-
-//   const token = req.cookies[`${tokens.auth_token}`];
-//   if (!token) {
-//     res.status(401).send("Not authenticated");
-//     return;
-//   }
-
-//   try {
-//     const user = jwt.verify(
-//       token,
-//       process.env.JWT_SECRET as string
-//     ) as IStudent;
-
-//     const student = await StudentModel.findById(user._id);
-
-//     if (!student) {
-//       res.status(401).send("Not authenticated");
-//       return;
-//     }
-
-//     req.student = user;
-
-//     next();
-//   } catch (err) {
-//     res.status(403).json({ message: "Invalid token" });
-//   }
-// }
+export interface JointInterface extends Request {
+  student?: IStudent;
+}
 
 export async function authenticateToken(
   req: AuthenticatedStudent,
