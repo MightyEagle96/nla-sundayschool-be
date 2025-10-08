@@ -101,11 +101,13 @@ export const loginAccount = async (req: Request, res: Response) => {
       const accessToken = generateToken({
         _id: existing._id,
         email: existing.email,
+        role: "student",
       });
 
       const refreshToken = generateRefreshToken({
         _id: existing._id,
         email: existing.email,
+        role: "student",
       });
       // res.send("Account logged in successfully");
       res
@@ -129,7 +131,13 @@ export const loginAccount = async (req: Request, res: Response) => {
 };
 
 export const myProfile = async (req: JointInterface, res: Response) => {
-  res.send(req.student);
+  if (req.student) {
+    res.send(req.student);
+  }
+
+  if (req.teacher) {
+    res.send(req.teacher);
+  }
 };
 
 export const logoutAccount = async (req: JointInterface, res: Response) => {

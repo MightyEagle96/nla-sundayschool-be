@@ -12,49 +12,70 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
+exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
 //Create Account
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentModel_1 = require("../models/studentModel");
 const DataQueue_1 = require("../utils/DataQueue");
-const mailController_1 = require("../utils/mailController");
-const emailTemplate_1 = require("./emailTemplate");
 const jwtController_1 = require("./jwtController");
-const queue = new DataQueue_1.ConcurrentJobQueue(4, 10);
-const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const body = req.body;
-        const existing = yield studentModel_1.StudentModel.findOne({
-            $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
-        });
-        if (existing) {
-            return res.status(400).send("Account already exists");
-        }
-        res.send("Account is being created");
-        queue
-            .enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
-            const student = new studentModel_1.StudentModel(body);
-            yield student.save();
-            const activationLink = `http://localhost:5173/activate/${student._id}`;
-            yield (0, mailController_1.sendEmailFunc)(student.email, "Activate your account", (0, emailTemplate_1.notificationEmailTemplate)(`${student.firstName} ${student.lastName}`, activationLink));
-        }))
-            .then(() => {
-            // res.status(200).send("Account created successfully");
-        })
-            .catch((err) => {
-            console.error("Queue job failed:", err);
-            // res.status(500).send("Error creating account");
-        });
-    }
-    catch (error) {
-        console.error("Request error:", error);
-        res.status(500).send("Internal server error");
-    }
-});
-exports.createAccount = createAccount;
+const accountQueue = new DataQueue_1.ConcurrentJobQueue(4, 10);
+// export const createAccount = async (req: Request, res: Response) => {
+//   try {
+//     const body: IStudent = req.body;
+//     const existing = await StudentModel.findOne({
+//       $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
+//     });
+//     if (existing) {
+//       return res.status(400).send("Account already exists");
+//     }
+//     res.send("Account is being created");
+//     queue
+//       .enqueue(async () => {
+//         const student = new StudentModel(body);
+//         await student.save();
+//         const activationLink = `http://localhost:5173/activate/${student._id}`;
+//         await sendEmailFunc(
+//           student.email,
+//           "Activate your account",
+//           notificationEmailTemplate(
+//             `${student.firstName} ${student.lastName}`,
+//             activationLink
+//           )
+//         );
+//       })
+//       .then(() => {
+//         // res.status(200).send("Account created successfully");
+//       })
+//       .catch((err) => {
+//         console.error("Queue job failed:", err);
+//         // res.status(500).send("Error creating account");
+//       });
+//   } catch (error) {
+//     console.error("Request error:", error);
+//     res.status(500).send("Internal server error");
+//   }
+// };
 //Verify Email
 //Verify Account
 //Login
+const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const existingAccount = yield studentModel_1.StudentModel.findOne({
+        email: req.body.email,
+    });
+    if (existingAccount) {
+        return res.status(400).send("Account already exists");
+    }
+    accountQueue.enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            yield studentModel_1.StudentModel.create(req.body);
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }));
+    res.send("Account created successfully");
+});
+exports.createAccount = createAccount;
 const loginAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const existing = yield studentModel_1.StudentModel.findOne({
@@ -68,10 +89,12 @@ const loginAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const accessToken = (0, jwtController_1.generateToken)({
                 _id: existing._id,
                 email: existing.email,
+                role: "student",
             });
             const refreshToken = (0, jwtController_1.generateRefreshToken)({
                 _id: existing._id,
                 email: existing.email,
+                role: "student",
             });
             // res.send("Account logged in successfully");
             res
@@ -95,6 +118,22 @@ const loginAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
 });
 exports.loginAccount = loginAccount;
+const myProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.student) {
+        res.send(req.student);
+    }
+    if (req.teacher) {
+        res.send(req.teacher);
+    }
+});
+exports.myProfile = myProfile;
+const logoutAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res
+        .clearCookie(jwtController_1.tokens.auth_token)
+        .clearCookie(jwtController_1.tokens.refresh_token)
+        .send("Logged Out");
+});
+exports.logoutAccount = logoutAccount;
 //Change Password
 //Delete Account
 //Get Account Details
@@ -103,10 +142,6 @@ exports.loginAccount = loginAccount;
 //Delete Account
 //Update Account
 //Get Account
-const myProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.send(req.student);
-});
-exports.myProfile = myProfile;
 //Logout
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.clearCookie(jwtController_1.tokens.auth_token, {

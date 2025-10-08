@@ -12,29 +12,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StudentModel = void 0;
+exports.TeacherModel = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const studentSchema = new mongoose_1.Schema({
+const teacherSchema = new mongoose_1.Schema({
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     email: {
         type: String,
         required: true,
+        unique: true,
         lowercase: true,
         trim: true,
     },
     isConfirmed: { type: Boolean, default: false },
-    phoneNumber: { type: String, required: true, trim: true },
+    phoneNumber: { type: String, required: true, trim: true, unique: true },
     classCategory: { type: String, required: true },
     className: { type: String, required: true },
     // title: { type: String, required: true },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
 }, { timestamps: true });
-studentSchema.index({ email: 1 }, { unique: true });
-studentSchema.index({ phoneNumber: 1 }, { unique: true });
-studentSchema.pre("save", function (next) {
+teacherSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!this.isModified("password"))
             return next();
@@ -43,4 +42,4 @@ studentSchema.pre("save", function (next) {
         next();
     });
 });
-exports.StudentModel = (0, mongoose_1.model)("Student", studentSchema);
+exports.TeacherModel = (0, mongoose_1.model)("Teacher", teacherSchema);
