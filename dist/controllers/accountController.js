@@ -123,6 +123,7 @@ const myProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.send(req.student);
     }
     if (req.teacher) {
+        req.teacher.role === "teacher";
         res.send(req.teacher);
     }
 });

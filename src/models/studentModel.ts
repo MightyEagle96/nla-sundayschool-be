@@ -13,6 +13,7 @@ export interface IStudent {
   className: string;
   title: string;
   gender: string;
+  role: string;
 }
 
 export interface AuthenticatedStudent extends Request {
@@ -35,6 +36,7 @@ const studentSchema = new Schema<IStudent>(
     phoneNumber: { type: String, required: true, trim: true },
     classCategory: { type: String, required: true },
     className: { type: String, required: true },
+    role: { type: String, default: "student" },
     // title: { type: String, required: true },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length

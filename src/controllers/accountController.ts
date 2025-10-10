@@ -136,6 +136,7 @@ export const myProfile = async (req: JointInterface, res: Response) => {
   }
 
   if (req.teacher) {
+    req.teacher.role === "teacher";
     res.send(req.teacher);
   }
 };

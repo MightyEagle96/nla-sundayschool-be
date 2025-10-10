@@ -30,6 +30,7 @@ const teacherSchema = new mongoose_1.Schema({
     classCategory: { type: String, required: true },
     className: { type: String, required: true },
     // title: { type: String, required: true },
+    role: { type: String, default: "teacher" },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
 }, { timestamps: true });
