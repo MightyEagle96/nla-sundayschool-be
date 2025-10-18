@@ -15,6 +15,8 @@ import {
   JointInterface,
   tokens,
 } from "./jwtController";
+import jwt from "jsonwebtoken";
+import { TeacherModel } from "../models/teacherModel";
 
 const accountQueue = new ConcurrentJobQueue(4, 10);
 // export const createAccount = async (req: Request, res: Response) => {
@@ -177,4 +179,88 @@ export const logout = async (req: Request, res: Response) => {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
   res.send("Logged Out");
+};
+
+export const getRefreshToken = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies[tokens.refresh_token];
+
+  if (!refreshToken) {
+    return res.status(401).send("Not authenticated");
+  }
+
+  try {
+    const decoded: any = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN as string
+    );
+
+    const student = await StudentModel.findById(decoded._id);
+
+    const teacher = await TeacherModel.findById(decoded._id);
+
+    if (student) {
+      const accessToken = generateToken({
+        _id: student._id,
+        email: student.email,
+        role: "student",
+      });
+
+      const newRefreshToken = generateRefreshToken({
+        _id: student._id,
+        email: student.email,
+        role: "student",
+      });
+
+      return res
+        .cookie(tokens.auth_token, accessToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60, // 1h
+        })
+        .cookie(tokens.refresh_token, newRefreshToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+        })
+        .send("Logged In");
+      //console.log("na here o");
+      //return res.status(401).send("Invalid refresh token");
+    }
+
+    if (teacher) {
+      const accessToken = generateToken({
+        _id: teacher._id,
+        email: teacher.email,
+        role: "teacher",
+      });
+
+      const refreshToken = generateRefreshToken({
+        _id: teacher._id,
+        email: teacher.email,
+        role: "teacher",
+      });
+
+      return res
+        .cookie(tokens.auth_token, accessToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60, // 1h
+        })
+        .cookie(tokens.refresh_token, refreshToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+        })
+        .send("Logged In");
+    }
+
+    return res.status(401).send("Invalid refresh token");
+  } catch (error) {
+    res.status(401).send("Invalid refresh token");
+  }
+  //  res.send(req.cookies[tokens.refresh_token]);
 };

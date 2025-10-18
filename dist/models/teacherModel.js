@@ -27,12 +27,13 @@ const teacherSchema = new mongoose_1.Schema({
     },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true, unique: true },
-    classCategory: { type: String, required: true },
-    className: { type: String, required: true },
+    classCategory: { type: String },
+    className: { type: String },
     // title: { type: String, required: true },
     role: { type: String, default: "teacher" },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
+    adminRights: { type: Boolean, default: false },
 }, { timestamps: true });
 teacherSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {

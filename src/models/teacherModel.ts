@@ -14,6 +14,7 @@ export interface ITeacher {
   title: string;
   gender: string;
   role: string;
+  adminRights: boolean;
 }
 
 export interface AuthenticatedTeacher extends Request {
@@ -34,12 +35,13 @@ const teacherSchema = new Schema<ITeacher>(
     },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true, unique: true },
-    classCategory: { type: String, required: true },
-    className: { type: String, required: true },
+    classCategory: { type: String },
+    className: { type: String },
     // title: { type: String, required: true },
     role: { type: String, default: "teacher" },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
+    adminRights: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
