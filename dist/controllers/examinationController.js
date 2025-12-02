@@ -49,5 +49,8 @@ const viewExaminations = (req, res) => __awaiter(void 0, void 0, void 0, functio
     res.send(mappedExaminations);
 });
 exports.viewExaminations = viewExaminations;
-const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield examinationModel_1.default.deleteOne({ _id: req.query.id });
+    res.send("Examination deleted");
+});
 exports.deleteExamination = deleteExamination;

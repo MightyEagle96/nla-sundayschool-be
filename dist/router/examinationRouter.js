@@ -9,4 +9,5 @@ const examinationRouter = (0, express_1.Router)();
 exports.examinationRouter = examinationRouter;
 examinationRouter
     .post("/create", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.createExamination)
-    .get("/view", examinationController_1.viewExaminations);
+    .get("/view", examinationController_1.viewExaminations)
+    .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination);

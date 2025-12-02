@@ -48,4 +48,8 @@ export const viewExaminations = async (req: Request, res: Response) => {
 export const deleteExamination = async (
   req: AuthenticatedTeacher,
   res: Response
-) => {};
+) => {
+  await examinationModel.deleteOne({ _id: req.query.id });
+
+  res.send("Examination deleted");
+};
