@@ -14,4 +14,5 @@ accountRouter
     .get("/logout", jwtController_1.authenticateToken, accountController_1.logout)
     // teacher account
     .post("/teacher/register", teacherAccountController_1.teacherCreateAccount)
-    .post("/teacher/login", teacherAccountController_1.teacherLoginAccount);
+    .post("/teacher/login", teacherAccountController_1.teacherLoginAccount)
+    .get("/refresh", accountController_1.getRefreshToken);

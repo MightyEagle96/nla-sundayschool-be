@@ -20,5 +20,6 @@ const schema = new Schema({
         },
     ],
     classCategory: String,
+    bankName: String,
 }, { timestamps: true });
 exports.default = model("QuestionBank", schema);

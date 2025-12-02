@@ -40,7 +40,6 @@ function authenticateToken(req, res, next) {
         try {
             // Get token from cookie
             const token = req.cookies[exports.tokens.auth_token];
-            console.log("token", token);
             if (!token) {
                 return res.status(401).json({ message: "Not authenticated" });
             }

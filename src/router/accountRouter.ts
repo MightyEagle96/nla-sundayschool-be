@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createAccount,
+  getRefreshToken,
   loginAccount,
   logout,
   myProfile,
@@ -21,6 +22,8 @@ accountRouter
 
   // teacher account
   .post("/teacher/register", teacherCreateAccount)
-  .post("/teacher/login", teacherLoginAccount);
+  .post("/teacher/login", teacherLoginAccount)
+
+  .get("/refresh", getRefreshToken);
 
 export { accountRouter };

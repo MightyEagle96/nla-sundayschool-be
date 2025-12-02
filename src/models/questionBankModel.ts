@@ -17,6 +17,7 @@ interface IQuestionBank {
   questions: [IQuestion];
   dateTaken: Date;
   classCategory: string;
+  bankName: string;
 }
 
 const schema = new Schema<IQuestionBank>(
@@ -35,6 +36,7 @@ const schema = new Schema<IQuestionBank>(
       },
     ],
     classCategory: String,
+    bankName: String,
   },
   { timestamps: true }
 );

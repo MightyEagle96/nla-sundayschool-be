@@ -41,7 +41,6 @@ export async function authenticateToken(
     // Get token from cookie
     const token = req.cookies[tokens.auth_token];
 
-    console.log("token", token);
     if (!token) {
       return res.status(401).json({ message: "Not authenticated" });
     }
