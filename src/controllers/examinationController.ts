@@ -7,10 +7,6 @@ export const createExamination = async (
   res: Response
 ) => {
   try {
-    if (req.teacher?.adminRights === false) {
-      return res.status(401).send("Not authorized");
-    }
-
     const existing = await examinationModel.findOne({ title: req.body.title });
 
     if (existing) {
@@ -24,8 +20,12 @@ export const createExamination = async (
         { _id: req.body.examinationId },
         { title: req.body.title }
       );
-    } else await examinationModel.create(req.body);
-    res.send("Examination created successfully");
+
+      res.send("Examination updated successfully");
+    } else {
+      await examinationModel.create(req.body);
+      res.send("Examination created successfully");
+    }
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
@@ -44,3 +44,8 @@ export const viewExaminations = async (req: Request, res: Response) => {
   });
   res.send(mappedExaminations);
 };
+
+export const deleteExamination = async (
+  req: AuthenticatedTeacher,
+  res: Response
+) => {};

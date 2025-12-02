@@ -1,6 +1,6 @@
 //Create Account
 import bcrypt from "bcrypt";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   AuthenticatedStudent,
   IStudent,
@@ -16,7 +16,7 @@ import {
   tokens,
 } from "./jwtController";
 import jwt from "jsonwebtoken";
-import { TeacherModel } from "../models/teacherModel";
+import { AuthenticatedTeacher, TeacherModel } from "../models/teacherModel";
 
 const accountQueue = new ConcurrentJobQueue(4, 10);
 // export const createAccount = async (req: Request, res: Response) => {
@@ -263,4 +263,16 @@ export const getRefreshToken = async (req: Request, res: Response) => {
     res.status(401).send("Invalid refresh token");
   }
   //  res.send(req.cookies[tokens.refresh_token]);
+};
+
+export const restrictToAdmin = (
+  req: AuthenticatedTeacher,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.teacher?.adminRights === false) {
+    return res.status(403).send("Not permitted");
+  }
+
+  next();
 };

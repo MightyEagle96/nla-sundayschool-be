@@ -12,25 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewExaminations = exports.createExamination = void 0;
+exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a;
     try {
-        if (((_a = req.teacher) === null || _a === void 0 ? void 0 : _a.adminRights) === false) {
-            return res.status(401).send("Not authorized");
-        }
         const existing = yield examinationModel_1.default.findOne({ title: req.body.title });
         if (existing) {
             return res.status(400).send("Examination already exists");
         }
-        req.body.createdBy = (_b = req.teacher) === null || _b === void 0 ? void 0 : _b._id;
+        req.body.createdBy = (_a = req.teacher) === null || _a === void 0 ? void 0 : _a._id;
         if (req.body.examinationId) {
             yield examinationModel_1.default.updateOne({ _id: req.body.examinationId }, { title: req.body.title });
+            res.send("Examination updated successfully");
         }
-        else
+        else {
             yield examinationModel_1.default.create(req.body);
-        res.send("Examination created successfully");
+            res.send("Examination created successfully");
+        }
     }
     catch (error) {
         console.log(error);
@@ -50,3 +49,5 @@ const viewExaminations = (req, res) => __awaiter(void 0, void 0, void 0, functio
     res.send(mappedExaminations);
 });
 exports.viewExaminations = viewExaminations;
+const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+exports.deleteExamination = deleteExamination;

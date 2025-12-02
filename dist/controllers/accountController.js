@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
+exports.restrictToAdmin = exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
 //Create Account
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentModel_1 = require("../models/studentModel");
@@ -231,3 +231,11 @@ const getRefreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function
     //  res.send(req.cookies[tokens.refresh_token]);
 });
 exports.getRefreshToken = getRefreshToken;
+const restrictToAdmin = (req, res, next) => {
+    var _a;
+    if (((_a = req.teacher) === null || _a === void 0 ? void 0 : _a.adminRights) === false) {
+        return res.status(403).send("Not permitted");
+    }
+    next();
+};
+exports.restrictToAdmin = restrictToAdmin;
