@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createQuestion,
+  deleteQuestion,
   uploadQuestionBankFile,
   viewQuestionBank,
 } from "../controllers/questionBankController";
@@ -21,6 +22,7 @@ questionBankRouter
     upload.single("file"),
     uploadQuestionBankFile
   )
+  .get("/delete", authenticateToken, deleteQuestion)
 
   .use("*", (req, res) => {
     res.status(404).send("Not found");

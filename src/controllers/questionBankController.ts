@@ -121,54 +121,6 @@ export const uploadQuestionBankFile = async (req: Request, res: Response) => {
   }
 };
 
-interface MulterRequest extends Request {
-  file: Express.Multer.File;
-}
-
-interface ProcessedQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: string;
-  classCategory: string;
-  authoredBy: Types.ObjectId;
-}
-
-const transformExcelQuestionsRobust = (
-  rawRows: any[],
-  classCategory: string,
-  authoredBy: Types.ObjectId
-): ProcessedQuestion[] => {
-  const questions: ProcessedQuestion[] = [];
-
-  for (let i = 0; i < rawRows.length; i++) {
-    const row = rawRows[i];
-    const values = Object.values(row)
-      .map((v) => (typeof v === "string" ? v.trim() : v))
-      .filter((v) => v !== null && v !== undefined && v !== "") as string[];
-
-    if (values.length < 6) {
-      console.warn(`Row ${i + 2}: Skipping (too few columns)`);
-      continue;
-    }
-
-    const question = values[0];
-    const options = values.slice(1, 5);
-    const rawAnswer = values[values.length - 1]; // last meaningful cell
-
-    const correctAnswer = resolveCorrectAnswer(rawAnswer, options);
-
-    questions.push({
-      question,
-      options,
-      correctAnswer,
-      classCategory,
-      authoredBy,
-    });
-  }
-
-  return questions;
-};
-
 function resolveCorrectAnswer(raw: string, options: string[]): string {
   const lower = raw.toLowerCase().trim();
 
@@ -201,3 +153,22 @@ function resolveCorrectAnswer(raw: string, options: string[]): string {
   );
   return options[0];
 }
+
+export const deleteQuestion = async (req: Request, res: Response) => {
+  try {
+    // await questionBankModel.deleteOne({ examination: req.query.examination });
+    //
+
+    await questionBankModel.updateOne(
+      { examination: req.query.examination },
+      {
+        $pull: {
+          questions: { _id: new Types.ObjectId(req.query.question as string) },
+        },
+      }
+    );
+    res.send("Question bank deleted successfully");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
