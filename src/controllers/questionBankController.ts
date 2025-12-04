@@ -1,30 +1,58 @@
 import { Request, Response } from "express";
 import questionBankModel from "../models/questionBankModel";
 import { JointInterface } from "./jwtController";
-
-export const createQuestionBank = async (
-  req: JointInterface,
-  res: Response
-) => {
-  try {
-    req.body.createdBy = req.teacher?._id;
-    const questionBank = await questionBankModel.create(req.body);
-    res.status(201).json(questionBank);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create question bank" });
-  }
-};
+import { AuthenticatedTeacher } from "../models/teacherModel";
 
 export const classCategory = {
   yaya: "yaya",
   adult: "adult",
 };
 
-export const viewQuestionBankCount = async (req: Request, res: Response) => {
-  const [adultCount, yayaCount] = await Promise.all([
-    questionBankModel.countDocuments({ classCategory: classCategory.adult }),
-    questionBankModel.countDocuments({ classCategory: classCategory.yaya }),
-  ]);
+export const createQuestion = async (
+  req: AuthenticatedTeacher,
+  res: Response
+) => {
+  try {
+    const questionBank = await questionBankModel.findOne({
+      examination: req.body.examination,
+    });
 
-  res.json({ yayaCount, adultCount });
+    if (questionBank) {
+      questionBank.questions.push(req.body);
+      await questionBank.save();
+    } else {
+      const newQuestionBank = await questionBankModel.create({
+        examination: req.body.examination,
+        questions: [req.body],
+      });
+    }
+
+    res.send("Question created successfully");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const viewQuestionBank = async (req: Request, res: Response) => {
+  try {
+    const questionBank = await questionBankModel
+      .findOne({
+        examination: req.query.examination,
+      })
+      .lean();
+
+    if (questionBank) {
+      const mapped = questionBank.questions.map((question, id) => {
+        return {
+          ...question,
+          id: id + 1,
+        };
+      });
+
+      return res.send(mapped);
+    }
+    res.send([]);
+  } catch (error) {
+    res.sendStatus(500);
+  }
 };

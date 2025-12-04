@@ -12,29 +12,51 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewQuestionBankCount = exports.classCategory = exports.createQuestionBank = void 0;
+exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
-const createQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    try {
-        req.body.createdBy = (_a = req.teacher) === null || _a === void 0 ? void 0 : _a._id;
-        const questionBank = yield questionBankModel_1.default.create(req.body);
-        res.status(201).json(questionBank);
-    }
-    catch (error) {
-        res.status(500).json({ error: "Failed to create question bank" });
-    }
-});
-exports.createQuestionBank = createQuestionBank;
 exports.classCategory = {
     yaya: "yaya",
     adult: "adult",
 };
-const viewQuestionBankCount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const [adultCount, yayaCount] = yield Promise.all([
-        questionBankModel_1.default.countDocuments({ classCategory: exports.classCategory.adult }),
-        questionBankModel_1.default.countDocuments({ classCategory: exports.classCategory.yaya }),
-    ]);
-    res.json({ yayaCount, adultCount });
+const createQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const questionBank = yield questionBankModel_1.default.findOne({
+            examination: req.body.examination,
+        });
+        if (questionBank) {
+            questionBank.questions.push(req.body);
+            yield questionBank.save();
+        }
+        else {
+            const newQuestionBank = yield questionBankModel_1.default.create({
+                examination: req.body.examination,
+                questions: [req.body],
+            });
+        }
+        res.send("Question created successfully");
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
 });
-exports.viewQuestionBankCount = viewQuestionBankCount;
+exports.createQuestion = createQuestion;
+const viewQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const questionBank = yield questionBankModel_1.default
+            .findOne({
+            examination: req.query.examination,
+        })
+            .lean();
+        if (questionBank) {
+            const mapped = questionBank.questions.map((question, id) => {
+                return Object.assign(Object.assign({}, question), { id: id + 1 });
+            });
+            return res.send(mapped);
+        }
+        res.send([]);
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.viewQuestionBank = viewQuestionBank;

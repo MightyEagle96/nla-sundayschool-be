@@ -1,10 +1,16 @@
 import { Router } from "express";
-import { viewQuestionBankCount } from "../controllers/questionBankController";
+import {
+  createQuestion,
+  viewQuestionBank,
+} from "../controllers/questionBankController";
+import { authenticateToken } from "../controllers/jwtController";
 
 const questionBankRouter = Router();
 
 questionBankRouter
-  .get("/count", viewQuestionBankCount)
+  //  .get("/count", viewQuestionBankCount)
+  .post("/create", authenticateToken, createQuestion)
+  .get("/view", authenticateToken, viewQuestionBank)
 
   .use("*", (req, res) => {
     res.status(404).send("Not found");

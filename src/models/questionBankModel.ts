@@ -1,10 +1,11 @@
 import mongoose, { Types } from "mongoose";
+import { classCategory } from "../controllers/questionBankController";
 
 const { Schema, model } = mongoose;
 
 interface IQuestion {
   question: string;
-  questionId: string;
+  classCategory: string;
   options: [string];
   correctAnswer: string;
   authoredBy: Types.ObjectId;
@@ -16,8 +17,8 @@ interface IQuestionBank {
   dateCreated: Date;
   questions: [IQuestion];
   dateTaken: Date;
-  classCategory: string;
   bankName: string;
+  examination: Types.ObjectId;
 }
 
 const schema = new Schema<IQuestionBank>(
@@ -32,11 +33,11 @@ const schema = new Schema<IQuestionBank>(
         questionId: String,
         options: [String],
         correctAnswer: String,
+        classCategory: String,
         authoredBy: { type: Schema.Types.ObjectId, ref: "Teacher" },
       },
     ],
-    classCategory: String,
-    bankName: String,
+    examination: { type: Schema.Types.ObjectId, ref: "Examination" },
   },
   { timestamps: true }
 );
