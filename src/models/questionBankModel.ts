@@ -30,7 +30,6 @@ const schema = new Schema<IQuestionBank>(
     questions: [
       {
         question: String,
-        questionId: String,
         options: [String],
         correctAnswer: String,
         classCategory: String,

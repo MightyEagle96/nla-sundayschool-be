@@ -13,7 +13,6 @@ const schema = new Schema({
     questions: [
         {
             question: String,
-            questionId: String,
             options: [String],
             correctAnswer: String,
             classCategory: String,

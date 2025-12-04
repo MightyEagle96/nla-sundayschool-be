@@ -12,8 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
+exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
+const convert_excel_to_json_1 = __importDefault(require("convert-excel-to-json"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = require("fs");
 exports.classCategory = {
     yaya: "yaya",
     adult: "adult",
@@ -60,3 +63,102 @@ const viewQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.viewQuestionBank = viewQuestionBank;
+const uploadQuestionBankFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    console.log("📤 Uploading question file...");
+    try {
+        if (!req.file) {
+            return res.status(400).send("No file uploaded");
+        }
+        const uploadPath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path; // <-- this exists
+        const finalPath = path_1.default.join("./uploads", (_b = req.file) === null || _b === void 0 ? void 0 : _b.originalname); // new name
+        console.log("📤 finished uploading question file.");
+        yield fs_1.promises.rename(uploadPath, finalPath);
+        const result = (0, convert_excel_to_json_1.default)({
+            sourceFile: finalPath,
+            header: {
+                rows: 1,
+            },
+            columnToKey: {
+                A: "question",
+                B: "option1",
+                C: "option2",
+                D: "option3",
+                E: "option4",
+                F: "answer",
+            },
+        });
+        const allRows = Object.values(result).flat();
+        console.log(`📄 Found ${allRows.length} total rows in Excel file.`);
+        const finalData = allRows.map((row) => {
+            const options = [row.option1, row.option2, row.option3, row.option4];
+            const correctAnswer = resolveCorrectAnswer(row.answer, options);
+            return {
+                question: row.question,
+                options: [row.option1, row.option2, row.option3, row.option4],
+                correctAnswer,
+                classCategory: req.query.classCategory,
+            };
+        });
+        yield questionBankModel_1.default.updateOne({ examination: req.query.examination }, { $push: { questions: { $each: finalData } } }, { upsert: true });
+        //console.log(allRows);
+        res.send("File uploaded successfully");
+        yield fs_1.promises.unlink(finalPath);
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.uploadQuestionBankFile = uploadQuestionBankFile;
+const transformExcelQuestionsRobust = (rawRows, classCategory, authoredBy) => {
+    const questions = [];
+    for (let i = 0; i < rawRows.length; i++) {
+        const row = rawRows[i];
+        const values = Object.values(row)
+            .map((v) => (typeof v === "string" ? v.trim() : v))
+            .filter((v) => v !== null && v !== undefined && v !== "");
+        if (values.length < 6) {
+            console.warn(`Row ${i + 2}: Skipping (too few columns)`);
+            continue;
+        }
+        const question = values[0];
+        const options = values.slice(1, 5);
+        const rawAnswer = values[values.length - 1]; // last meaningful cell
+        const correctAnswer = resolveCorrectAnswer(rawAnswer, options);
+        questions.push({
+            question,
+            options,
+            correctAnswer,
+            classCategory,
+            authoredBy,
+        });
+    }
+    return questions;
+};
+function resolveCorrectAnswer(raw, options) {
+    const lower = raw.toLowerCase().trim();
+    // Letter or number
+    const letterMatch = lower.match(/^[abcd1-4]$/);
+    if (letterMatch) {
+        const idx = "abcd1234".indexOf(lower[0]);
+        if (idx >= 0 && idx < 4)
+            return options[idx];
+    }
+    // "a)" or "A." style
+    const prefixMatch = lower.match(/^[abcd][\)\.\]]/);
+    if (prefixMatch) {
+        const idx = "abcd".indexOf(prefixMatch[0][0]);
+        if (idx >= 0 && idx < 4)
+            return options[idx];
+    }
+    // Direct text match
+    const exact = options.find((opt) => opt.toLowerCase() === lower);
+    if (exact)
+        return exact;
+    const partial = options.find((opt) => opt.toLowerCase().includes(lower) || lower.includes(opt.toLowerCase()));
+    if (partial)
+        return partial;
+    console.warn(`Could not resolve answer "${raw}". Defaulting to first option.`);
+    return options[0];
+}
