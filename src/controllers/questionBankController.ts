@@ -53,9 +53,29 @@ export const viewQuestionBank = async (req: Request, res: Response) => {
         };
       });
 
-      return res.send(mapped);
+      const yayaQuestions = mapped.filter(
+        (question) => question.classCategory === classCategory.yaya
+      ).length;
+      const adultQuestions = mapped.filter(
+        (question) => question.classCategory === classCategory.adult
+      ).length;
+      return res.send({
+        questions: mapped,
+        questionsCount: {
+          yayaQuestions,
+          adultQuestions,
+          totalQuestions: mapped.length,
+        },
+      });
     }
-    res.send([]);
+    res.send({
+      questions: [],
+      questionsCount: {
+        yayaQuestions: 0,
+        adultQuestions: 0,
+        totalQuestions: 0,
+      },
+    });
   } catch (error) {
     res.sendStatus(500);
   }
@@ -167,6 +187,15 @@ export const deleteQuestion = async (req: Request, res: Response) => {
         },
       }
     );
+    res.send("Question bank deleted successfully");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const deleteQuestionBank = async (req: Request, res: Response) => {
+  try {
+    await questionBankModel.deleteOne({ examination: req.query.examination });
     res.send("Question bank deleted successfully");
   } catch (error) {
     res.sendStatus(500);

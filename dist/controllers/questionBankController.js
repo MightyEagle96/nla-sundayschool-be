@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteQuestion = exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
+exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
 const convert_excel_to_json_1 = __importDefault(require("convert-excel-to-json"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const path_1 = __importDefault(require("path"));
@@ -55,9 +55,25 @@ const viewQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, functio
             const mapped = questionBank.questions.map((question, id) => {
                 return Object.assign(Object.assign({}, question), { id: id + 1 });
             });
-            return res.send(mapped);
+            const yayaQuestions = mapped.filter((question) => question.classCategory === exports.classCategory.yaya).length;
+            const adultQuestions = mapped.filter((question) => question.classCategory === exports.classCategory.adult).length;
+            return res.send({
+                questions: mapped,
+                questionsCount: {
+                    yayaQuestions,
+                    adultQuestions,
+                    totalQuestions: mapped.length,
+                },
+            });
         }
-        res.send([]);
+        res.send({
+            questions: [],
+            questionsCount: {
+                yayaQuestions: 0,
+                adultQuestions: 0,
+                totalQuestions: 0,
+            },
+        });
     }
     catch (error) {
         res.sendStatus(500);
@@ -154,3 +170,13 @@ const deleteQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.deleteQuestion = deleteQuestion;
+const deleteQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield questionBankModel_1.default.deleteOne({ examination: req.query.examination });
+        res.send("Question bank deleted successfully");
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.deleteQuestionBank = deleteQuestionBank;
