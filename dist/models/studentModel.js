@@ -32,6 +32,7 @@ const studentSchema = new mongoose_1.Schema({
     // title: { type: String, required: true },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
+    disabled: { type: Boolean, default: false },
 }, { timestamps: true });
 studentSchema.index({ email: 1 }, { unique: true });
 studentSchema.index({ phoneNumber: 1 }, { unique: true });

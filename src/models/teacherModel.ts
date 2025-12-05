@@ -15,6 +15,7 @@ export interface ITeacher {
   gender: string;
   role: string;
   adminRights: boolean;
+  disabled: boolean;
 }
 
 export interface AuthenticatedTeacher extends Request {
@@ -42,6 +43,7 @@ const teacherSchema = new Schema<ITeacher>(
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
     adminRights: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

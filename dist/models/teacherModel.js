@@ -34,6 +34,7 @@ const teacherSchema = new mongoose_1.Schema({
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
     adminRights: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false },
 }, { timestamps: true });
 teacherSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
