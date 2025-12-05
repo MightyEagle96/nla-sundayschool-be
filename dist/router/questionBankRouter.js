@@ -18,6 +18,7 @@ questionBankRouter
     .post("/upload", jwtController_1.authenticateToken, upload.single("file"), questionBankController_1.uploadQuestionBankFile)
     .get("/delete", jwtController_1.authenticateToken, questionBankController_1.deleteQuestion)
     .get("/deletequestionbank", jwtController_1.authenticateToken, questionBankController_1.deleteQuestionBank)
+    .put("/update", jwtController_1.authenticateToken, questionBankController_1.updateQuestion)
     .use("*", (req, res) => {
     res.status(404).send("Not found");
 });

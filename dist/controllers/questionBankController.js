@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
+exports.updateQuestion = exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
 const convert_excel_to_json_1 = __importDefault(require("convert-excel-to-json"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const path_1 = __importDefault(require("path"));
@@ -180,3 +180,22 @@ const deleteQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.deleteQuestionBank = deleteQuestionBank;
+const updateQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { questionId, examination } = req.query;
+        const { question, options, correctAnswer } = req.body;
+        yield questionBankModel_1.default.updateOne({ "questions._id": questionId, examination }, {
+            $set: {
+                "questions.$.question": question,
+                "questions.$.options": options,
+                "questions.$.correctAnswer": correctAnswer,
+            },
+        });
+        res.send("Question updated successfully");
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.updateQuestion = updateQuestion;

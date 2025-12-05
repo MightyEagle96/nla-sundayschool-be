@@ -201,3 +201,29 @@ export const deleteQuestionBank = async (req: Request, res: Response) => {
     res.sendStatus(500);
   }
 };
+
+export const updateQuestion = async (
+  req: AuthenticatedTeacher,
+  res: Response
+) => {
+  try {
+    const { questionId, examination } = req.query;
+    const { question, options, correctAnswer } = req.body;
+
+    await questionBankModel.updateOne(
+      { "questions._id": questionId, examination },
+      {
+        $set: {
+          "questions.$.question": question,
+          "questions.$.options": options,
+          "questions.$.correctAnswer": correctAnswer,
+        },
+      }
+    );
+
+    res.send("Question updated successfully");
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+};

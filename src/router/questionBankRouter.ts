@@ -3,6 +3,7 @@ import {
   createQuestion,
   deleteQuestion,
   deleteQuestionBank,
+  updateQuestion,
   uploadQuestionBankFile,
   viewQuestionBank,
 } from "../controllers/questionBankController";
@@ -25,6 +26,7 @@ questionBankRouter
   )
   .get("/delete", authenticateToken, deleteQuestion)
   .get("/deletequestionbank", authenticateToken, deleteQuestionBank)
+  .put("/update", authenticateToken, updateQuestion)
 
   .use("*", (req, res) => {
     res.status(404).send("Not found");
