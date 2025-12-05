@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
+const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -37,16 +38,79 @@ const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.createExamination = createExamination;
+// export const viewExaminations = async (req: Request, res: Response) => {
+//   const examinations = await examinationModel.find();
+//   const mappedExaminations = examinations.map((examination, i) => {
+//     return {
+//       _id: examination._id,
+//       title: examination.title,
+//       id: i + 1,
+//     };
+//   });
+//   res.send(mappedExaminations);
+// };
 const viewExaminations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const examinations = yield examinationModel_1.default.find();
-    const mappedExaminations = examinations.map((examination, i) => {
-        return {
-            _id: examination._id,
-            title: examination.title,
-            id: i + 1,
-        };
-    });
-    res.send(mappedExaminations);
+    try {
+        // Fetch all examinations first
+        const examinations = yield examinationModel_1.default.find();
+        // Get all question banks grouped by examination
+        const stats = yield questionBankModel_1.default.aggregate([
+            {
+                $group: {
+                    _id: "$examination",
+                    totalQuestions: { $sum: { $size: "$questions" } },
+                    adultQuestions: {
+                        $sum: {
+                            $size: {
+                                $filter: {
+                                    input: "$questions",
+                                    as: "q",
+                                    cond: { $eq: ["$$q.classCategory", "adult"] },
+                                },
+                            },
+                        },
+                    },
+                    yayaQuestions: {
+                        $sum: {
+                            $size: {
+                                $filter: {
+                                    input: "$questions",
+                                    as: "q",
+                                    cond: { $eq: ["$$q.classCategory", "yaya"] },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        ]);
+        // Convert aggregation result to a lookup map
+        const statsMap = new Map(stats.map((s) => {
+            var _a;
+            return [
+                (_a = s._id) === null || _a === void 0 ? void 0 : _a.toString(),
+                {
+                    totalQuestions: s.totalQuestions,
+                    adultQuestions: s.adultQuestions,
+                    yayaQuestions: s.yayaQuestions,
+                },
+            ];
+        }));
+        // Combine examination data with stats
+        const mapped = examinations.map((exam, index) => {
+            const stat = statsMap.get(exam._id.toString()) || {
+                totalQuestions: 0,
+                adultQuestions: 0,
+                yayaQuestions: 0,
+            };
+            return Object.assign({ _id: exam._id, title: exam.title, id: index + 1 }, stat);
+        });
+        res.send(mapped);
+    }
+    catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
 });
 exports.viewExaminations = viewExaminations;
 const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

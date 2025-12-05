@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import examinationModel from "../models/examinationModel";
 import { AuthenticatedTeacher } from "../models/teacherModel";
+import questionBankModel from "../models/questionBankModel";
 
 export const createExamination = async (
   req: AuthenticatedTeacher,
@@ -32,17 +33,89 @@ export const createExamination = async (
   }
 };
 
-export const viewExaminations = async (req: Request, res: Response) => {
-  const examinations = await examinationModel.find();
+// export const viewExaminations = async (req: Request, res: Response) => {
+//   const examinations = await examinationModel.find();
 
-  const mappedExaminations = examinations.map((examination, i) => {
-    return {
-      _id: examination._id,
-      title: examination.title,
-      id: i + 1,
-    };
-  });
-  res.send(mappedExaminations);
+//   const mappedExaminations = examinations.map((examination, i) => {
+//     return {
+//       _id: examination._id,
+//       title: examination.title,
+//       id: i + 1,
+//     };
+//   });
+//   res.send(mappedExaminations);
+// };
+
+export const viewExaminations = async (req: Request, res: Response) => {
+  try {
+    // Fetch all examinations first
+    const examinations = await examinationModel.find();
+
+    // Get all question banks grouped by examination
+    const stats = await questionBankModel.aggregate([
+      {
+        $group: {
+          _id: "$examination",
+          totalQuestions: { $sum: { $size: "$questions" } },
+          adultQuestions: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$questions",
+                  as: "q",
+                  cond: { $eq: ["$$q.classCategory", "adult"] },
+                },
+              },
+            },
+          },
+          yayaQuestions: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$questions",
+                  as: "q",
+                  cond: { $eq: ["$$q.classCategory", "yaya"] },
+                },
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    // Convert aggregation result to a lookup map
+    const statsMap = new Map(
+      stats.map((s) => [
+        s._id?.toString(),
+        {
+          totalQuestions: s.totalQuestions,
+          adultQuestions: s.adultQuestions,
+          yayaQuestions: s.yayaQuestions,
+        },
+      ])
+    );
+
+    // Combine examination data with stats
+    const mapped = examinations.map((exam, index) => {
+      const stat = statsMap.get(exam._id.toString()) || {
+        totalQuestions: 0,
+        adultQuestions: 0,
+        yayaQuestions: 0,
+      };
+
+      return {
+        _id: exam._id,
+        title: exam.title,
+        id: index + 1,
+        ...stat,
+      };
+    });
+
+    res.send(mapped);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
 };
 
 export const deleteExamination = async (
