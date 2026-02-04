@@ -10,4 +10,6 @@ exports.examinationRouter = examinationRouter;
 examinationRouter
     .post("/create", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.createExamination)
     .get("/view", examinationController_1.viewExaminations)
-    .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination);
+    .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination)
+    .get("/toggleexamination", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
+    .get("/viewactiveexamination", examinationController_1.viewActiveExamination);

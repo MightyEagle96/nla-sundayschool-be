@@ -15,4 +15,8 @@ accountRouter
     // teacher account
     .post("/teacher/register", teacherAccountController_1.teacherCreateAccount)
     .post("/teacher/login", teacherAccountController_1.teacherLoginAccount)
-    .get("/refresh", accountController_1.getRefreshToken);
+    .get("/refresh", accountController_1.getRefreshToken)
+    .get("/candidates", jwtController_1.authenticateToken, accountController_1.viewCandidates)
+    .get("*", (req, res) => {
+    res.status(404).send("Not found");
+});

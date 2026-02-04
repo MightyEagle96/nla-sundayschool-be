@@ -6,5 +6,7 @@ const schema = new mongoose_1.Schema({
     dateScheduled: Date,
     timeScheduled: Date,
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Teacher" },
+    active: { type: Boolean, default: false },
+    duration: { type: Number, default: 10 },
 }, { timestamps: true });
 exports.default = (0, mongoose_1.model)("Examination", schema);

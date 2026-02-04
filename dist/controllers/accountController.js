@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restrictToAdmin = exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
+exports.viewCandidates = exports.restrictToAdmin = exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
 //Create Account
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentModel_1 = require("../models/studentModel");
@@ -239,3 +239,38 @@ const restrictToAdmin = (req, res, next) => {
     next();
 };
 exports.restrictToAdmin = restrictToAdmin;
+//view candidates
+const viewCandidates = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        try {
+            const page = (req.query.page || 1);
+            const limit = (req.query.limit || 50);
+            const candidates = yield studentModel_1.StudentModel.find()
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .lean();
+            const total = yield studentModel_1.StudentModel.countDocuments();
+            const totalCandidates = candidates.map((c, i) => {
+                return Object.assign(Object.assign({}, c), { id: (page - 1) * limit + i + 1 });
+            });
+            res.send({
+                candidates: totalCandidates,
+                total,
+                page,
+                limit,
+            });
+        }
+        catch (error) {
+            res.send({
+                candidates: [],
+                total: 0,
+                page: 0,
+                limit: 0,
+            });
+        }
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.viewCandidates = viewCandidates;

@@ -5,7 +5,7 @@ import questionBankModel from "../models/questionBankModel";
 
 export const createExamination = async (
   req: AuthenticatedTeacher,
-  res: Response
+  res: Response,
 ) => {
   try {
     const existing = await examinationModel.findOne({ title: req.body.title });
@@ -19,7 +19,7 @@ export const createExamination = async (
     if (req.body.examinationId) {
       await examinationModel.updateOne(
         { _id: req.body.examinationId },
-        { title: req.body.title }
+        { title: req.body.title },
       );
 
       res.send("Examination updated successfully");
@@ -92,7 +92,7 @@ export const viewExaminations = async (req: Request, res: Response) => {
           adultQuestions: s.adultQuestions,
           yayaQuestions: s.yayaQuestions,
         },
-      ])
+      ]),
     );
 
     // Combine examination data with stats
@@ -107,6 +107,7 @@ export const viewExaminations = async (req: Request, res: Response) => {
         _id: exam._id,
         title: exam.title,
         id: index + 1,
+        duration: exam.duration,
         ...stat,
       };
     });
@@ -120,9 +121,33 @@ export const viewExaminations = async (req: Request, res: Response) => {
 
 export const deleteExamination = async (
   req: AuthenticatedTeacher,
-  res: Response
+  res: Response,
 ) => {
   await examinationModel.deleteOne({ _id: req.query.id });
 
   res.send("Examination deleted");
+};
+
+export const viewActiveExamination = async (req: Request, res: Response) => {
+  const examination = await examinationModel.findOne({ active: true });
+  res.send(examination);
+};
+
+export const toggleActivation = async (req: Request, res: Response) => {
+  try {
+    const examination = await examinationModel.findOne({ _id: req.query.id });
+
+    if (!examination) {
+      return res.status(400).send("Examination not found");
+    }
+
+    await examinationModel.updateMany({}, { active: false });
+
+    examination.active = !examination.active;
+    await examination.save();
+    res.send("Examination updated successfully");
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 };

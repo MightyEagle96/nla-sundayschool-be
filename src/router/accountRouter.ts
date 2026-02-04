@@ -5,6 +5,7 @@ import {
   loginAccount,
   logout,
   myProfile,
+  viewCandidates,
 } from "../controllers/accountController";
 import { authenticateToken } from "../controllers/jwtController";
 import {
@@ -24,6 +25,12 @@ accountRouter
   .post("/teacher/register", teacherCreateAccount)
   .post("/teacher/login", teacherLoginAccount)
 
-  .get("/refresh", getRefreshToken);
+  .get("/refresh", getRefreshToken)
+
+  .get("/candidates", authenticateToken, viewCandidates)
+
+  .get("*", (req, res) => {
+    res.status(404).send("Not found");
+  });
 
 export { accountRouter };

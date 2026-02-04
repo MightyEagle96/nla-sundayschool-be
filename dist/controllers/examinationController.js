@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
+exports.toggleActivation = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -103,7 +103,7 @@ const viewExaminations = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 adultQuestions: 0,
                 yayaQuestions: 0,
             };
-            return Object.assign({ _id: exam._id, title: exam.title, id: index + 1 }, stat);
+            return Object.assign({ _id: exam._id, title: exam.title, id: index + 1, duration: exam.duration }, stat);
         });
         res.send(mapped);
     }
@@ -118,3 +118,25 @@ const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, functi
     res.send("Examination deleted");
 });
 exports.deleteExamination = deleteExamination;
+const viewActiveExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const examination = yield examinationModel_1.default.findOne({ active: true });
+    res.send(examination);
+});
+exports.viewActiveExamination = viewActiveExamination;
+const toggleActivation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const examination = yield examinationModel_1.default.findOne({ _id: req.query.id });
+        if (!examination) {
+            return res.status(400).send("Examination not found");
+        }
+        yield examinationModel_1.default.updateMany({}, { active: false });
+        examination.active = !examination.active;
+        yield examination.save();
+        res.send("Examination updated successfully");
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.toggleActivation = toggleActivation;
