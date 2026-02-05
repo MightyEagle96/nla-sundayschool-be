@@ -23,6 +23,7 @@ examinationRouter
     toggleActivation,
   )
   .get("/viewactiveexamination", viewActiveExamination)
-  .patch("/updateduration", updateDuration);
+  .patch("/updateduration", updateDuration)
+  .get("/toggleactivation", toggleActivation);
 
 export { examinationRouter };

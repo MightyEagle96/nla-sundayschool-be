@@ -103,7 +103,7 @@ const viewExaminations = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 adultQuestions: 0,
                 yayaQuestions: 0,
             };
-            return Object.assign({ _id: exam._id, title: exam.title, id: index + 1, duration: exam.duration }, stat);
+            return Object.assign({ _id: exam._id, title: exam.title, id: index + 1, duration: exam.duration, active: exam.active }, stat);
         });
         res.send(mapped);
     }

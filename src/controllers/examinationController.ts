@@ -108,6 +108,7 @@ export const viewExaminations = async (req: Request, res: Response) => {
         title: exam.title,
         id: index + 1,
         duration: exam.duration,
+        active: exam.active,
         ...stat,
       };
     });
