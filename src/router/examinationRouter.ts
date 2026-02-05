@@ -4,6 +4,7 @@ import {
   createExamination,
   deleteExamination,
   toggleActivation,
+  updateDuration,
   viewActiveExamination,
   viewExaminations,
 } from "../controllers/examinationController";
@@ -21,6 +22,7 @@ examinationRouter
     restrictToAdmin,
     toggleActivation,
   )
-  .get("/viewactiveexamination", viewActiveExamination);
+  .get("/viewactiveexamination", viewActiveExamination)
+  .patch("/updateduration", updateDuration);
 
 export { examinationRouter };

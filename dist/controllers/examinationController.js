@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toggleActivation = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
+exports.updateDuration = exports.toggleActivation = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -140,3 +140,14 @@ const toggleActivation = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.toggleActivation = toggleActivation;
+const updateDuration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield examinationModel_1.default.updateOne({ _id: req.query.id }, { duration: req.body.duration });
+        res.send("Examination updated successfully");
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.updateDuration = updateDuration;

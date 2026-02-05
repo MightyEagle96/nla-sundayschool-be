@@ -12,4 +12,5 @@ examinationRouter
     .get("/view", examinationController_1.viewExaminations)
     .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination)
     .get("/toggleexamination", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
-    .get("/viewactiveexamination", examinationController_1.viewActiveExamination);
+    .get("/viewactiveexamination", examinationController_1.viewActiveExamination)
+    .patch("/updateduration", examinationController_1.updateDuration);

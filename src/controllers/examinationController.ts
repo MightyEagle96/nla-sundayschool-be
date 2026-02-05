@@ -151,3 +151,16 @@ export const toggleActivation = async (req: Request, res: Response) => {
     res.sendStatus(500);
   }
 };
+
+export const updateDuration = async (req: Request, res: Response) => {
+  try {
+    await examinationModel.updateOne(
+      { _id: req.query.id },
+      { duration: req.body.duration },
+    );
+    res.send("Examination updated successfully");
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+};
