@@ -4,7 +4,13 @@ import { ITeacher, TeacherModel } from "../models/teacherModel";
 import bcrypt from "bcrypt";
 import { generateRefreshToken, generateToken, tokens } from "./jwtController";
 
-const accountQueue = new ConcurrentJobQueue(4, 10);
+const accountQueue = new ConcurrentJobQueue({
+  concurrency: 4,
+  maxQueueSize: 10,
+  retries: 0,
+  retryDelay: 0,
+  shutdownTimeout: 30000,
+});
 
 export const teacherCreateAccount = async (req: Request, res: Response) => {
   try {

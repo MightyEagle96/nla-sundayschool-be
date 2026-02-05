@@ -3,9 +3,12 @@ import { authenticateToken } from "../controllers/jwtController";
 import {
   createExamination,
   deleteExamination,
+  fetchQuestions,
+  saveResponses,
   toggleActivation,
   updateDuration,
   viewActiveExamination,
+  viewExamination,
   viewExaminations,
 } from "../controllers/examinationController";
 import { restrictToAdmin } from "../controllers/accountController";
@@ -23,7 +26,16 @@ examinationRouter
     toggleActivation,
   )
   .get("/viewactiveexamination", viewActiveExamination)
-  .patch("/updateduration", updateDuration)
-  .get("/toggleactivation", toggleActivation);
+  .get("/viewexamination", viewExamination)
+  .patch("/updateduration", authenticateToken, restrictToAdmin, updateDuration)
+  .get(
+    "/toggleactivation",
+    authenticateToken,
+    restrictToAdmin,
+    toggleActivation,
+  )
+
+  .get("/fetchquestions", authenticateToken, fetchQuestions)
+  .post("/saveresponses", authenticateToken, saveResponses);
 
 export { examinationRouter };

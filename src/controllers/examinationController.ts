@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import examinationModel from "../models/examinationModel";
 import { AuthenticatedTeacher } from "../models/teacherModel";
 import questionBankModel from "../models/questionBankModel";
+import { AuthenticatedStudent } from "../models/studentModel";
+import { ConcurrentJobQueue } from "../utils/DataQueue";
+import CandidateResponses, { IResponses } from "../models/candidateResponses";
 
 export const createExamination = async (
   req: AuthenticatedTeacher,
@@ -134,6 +137,12 @@ export const viewActiveExamination = async (req: Request, res: Response) => {
   res.send(examination);
 };
 
+export const viewExamination = async (req: Request, res: Response) => {
+  const examination = await examinationModel.findById(req.query.id);
+
+  res.send(examination);
+};
+
 export const toggleActivation = async (req: Request, res: Response) => {
   try {
     const examination = await examinationModel.findOne({ _id: req.query.id });
@@ -163,5 +172,140 @@ export const updateDuration = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
+  }
+};
+
+export const fetchQuestions = async (
+  req: AuthenticatedStudent,
+  res: Response,
+) => {
+  try {
+    const examination = await examinationModel.findOne({ _id: req.query.id });
+
+    if (!examination) {
+      return res.status(400).send("Examination not found");
+    }
+
+    const questionBank = await questionBankModel.findOne({
+      examination: req.query.id,
+    });
+
+    if (!questionBank) {
+      return res.status(400).send("Question bank not found");
+    }
+
+    const filteredQuestions = questionBank.questions.filter(
+      (question) =>
+        question.classCategory.toLowerCase() ===
+        req.student?.classCategory.toLowerCase(),
+    );
+
+    if (filteredQuestions.length === 0) {
+      return res.status(400).send("No questions for your class category");
+    }
+
+    const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
+      _id: q._id,
+      question: q.question,
+      options: shuffleArray(q.options),
+    }));
+
+    res.send({
+      questions: examQuestions,
+      examination,
+    });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const shuffleArray = (array: any[]) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+const responseQueue = new ConcurrentJobQueue({
+  concurrency: 5,
+  maxQueueSize: 10,
+  retries: 3,
+  retryDelay: 1000,
+  shutdownTimeout: 30000,
+});
+
+export const saveResponses = async (
+  req: AuthenticatedStudent,
+  res: Response,
+) => {
+  try {
+    if (!req.student) {
+      return res.sendStatus(401);
+    }
+
+    const body: IResponses = {
+      ...req.body,
+      student: req.student._id,
+      questionCategory: req.student.classCategory,
+    };
+
+    responseQueue.enqueue(async () => {
+      await handleAssessmentScore(body);
+    });
+    res.status(202).send("Responses saved successfully");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const handleAssessmentScore = async (body: IResponses) => {
+  try {
+    const questionBank = await questionBankModel.findOne({
+      examination: body.examination,
+    });
+
+    if (!questionBank) return;
+
+    const filteredQuestions = questionBank.questions.filter(
+      (question) =>
+        question.classCategory.toLowerCase() ===
+        body.questionCategory.toLowerCase(),
+    );
+
+    const questionMap = new Map(
+      filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
+    );
+
+    let correct = 0;
+
+    for (const answer of body.answers) {
+      if (questionMap.get(answer.questionId) === answer.selectedOption) {
+        correct++;
+      }
+    }
+
+    const score = Math.round((correct / filteredQuestions.length) * 100);
+
+    await CandidateResponses.findOneAndUpdate(
+      {
+        examination: body.examination,
+        student: body.student,
+        questionCategory: body.questionCategory,
+      },
+      {
+        $set: {
+          ...body,
+          score,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+  } catch (error) {
+    console.log(error);
   }
 };

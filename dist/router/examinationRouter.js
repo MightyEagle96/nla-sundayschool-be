@@ -13,5 +13,8 @@ examinationRouter
     .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination)
     .get("/toggleexamination", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
     .get("/viewactiveexamination", examinationController_1.viewActiveExamination)
-    .patch("/updateduration", examinationController_1.updateDuration)
-    .get("/toggleactivation", examinationController_1.toggleActivation);
+    .get("/viewexamination", examinationController_1.viewExamination)
+    .patch("/updateduration", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.updateDuration)
+    .get("/toggleactivation", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
+    .get("/fetchquestions", jwtController_1.authenticateToken, examinationController_1.fetchQuestions)
+    .post("/saveresponses", jwtController_1.authenticateToken, examinationController_1.saveResponses);

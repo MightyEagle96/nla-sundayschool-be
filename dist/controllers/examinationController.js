@@ -12,9 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateDuration = exports.toggleActivation = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
+exports.handleAssessmentScore = exports.saveResponses = exports.shuffleArray = exports.fetchQuestions = exports.updateDuration = exports.toggleActivation = exports.viewExamination = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
+const DataQueue_1 = require("../utils/DataQueue");
+const candidateResponses_1 = __importDefault(require("../models/candidateResponses"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -123,6 +125,11 @@ const viewActiveExamination = (req, res) => __awaiter(void 0, void 0, void 0, fu
     res.send(examination);
 });
 exports.viewActiveExamination = viewActiveExamination;
+const viewExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const examination = yield examinationModel_1.default.findById(req.query.id);
+    res.send(examination);
+});
+exports.viewExamination = viewExamination;
 const toggleActivation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const examination = yield examinationModel_1.default.findOne({ _id: req.query.id });
@@ -151,3 +158,103 @@ const updateDuration = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateDuration = updateDuration;
+const fetchQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const examination = yield examinationModel_1.default.findOne({ _id: req.query.id });
+        if (!examination) {
+            return res.status(400).send("Examination not found");
+        }
+        const questionBank = yield questionBankModel_1.default.findOne({
+            examination: req.query.id,
+        });
+        if (!questionBank) {
+            return res.status(400).send("Question bank not found");
+        }
+        const filteredQuestions = questionBank.questions.filter((question) => {
+            var _a;
+            return question.classCategory.toLowerCase() ===
+                ((_a = req.student) === null || _a === void 0 ? void 0 : _a.classCategory.toLowerCase());
+        });
+        if (filteredQuestions.length === 0) {
+            return res.status(400).send("No questions for your class category");
+        }
+        const examQuestions = (0, exports.shuffleArray)(filteredQuestions).map((q) => ({
+            _id: q._id,
+            question: q.question,
+            options: (0, exports.shuffleArray)(q.options),
+        }));
+        res.send({
+            questions: examQuestions,
+            examination,
+        });
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.fetchQuestions = fetchQuestions;
+const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+};
+exports.shuffleArray = shuffleArray;
+const responseQueue = new DataQueue_1.ConcurrentJobQueue({
+    concurrency: 5,
+    maxQueueSize: 10,
+    retries: 3,
+    retryDelay: 1000,
+    shutdownTimeout: 30000,
+});
+const saveResponses = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.student) {
+            return res.sendStatus(401);
+        }
+        const body = Object.assign(Object.assign({}, req.body), { student: req.student._id, questionCategory: req.student.classCategory });
+        responseQueue.enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
+            yield (0, exports.handleAssessmentScore)(body);
+        }));
+        res.status(202).send("Responses saved successfully");
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.saveResponses = saveResponses;
+const handleAssessmentScore = (body) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const questionBank = yield questionBankModel_1.default.findOne({
+            examination: body.examination,
+        });
+        if (!questionBank)
+            return;
+        const filteredQuestions = questionBank.questions.filter((question) => question.classCategory.toLowerCase() ===
+            body.questionCategory.toLowerCase());
+        const questionMap = new Map(filteredQuestions.map((q) => [q._id.toString(), q.correctAnswer]));
+        let correct = 0;
+        for (const answer of body.answers) {
+            if (questionMap.get(answer.questionId) === answer.selectedOption) {
+                correct++;
+            }
+        }
+        const score = Math.round((correct / filteredQuestions.length) * 100);
+        yield candidateResponses_1.default.findOneAndUpdate({
+            examination: body.examination,
+            student: body.student,
+            questionCategory: body.questionCategory,
+        }, {
+            $set: Object.assign(Object.assign({}, body), { score }),
+        }, {
+            upsert: true,
+            new: true,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.handleAssessmentScore = handleAssessmentScore;

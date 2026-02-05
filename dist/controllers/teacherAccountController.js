@@ -17,7 +17,13 @@ const DataQueue_1 = require("../utils/DataQueue");
 const teacherModel_1 = require("../models/teacherModel");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jwtController_1 = require("./jwtController");
-const accountQueue = new DataQueue_1.ConcurrentJobQueue(4, 10);
+const accountQueue = new DataQueue_1.ConcurrentJobQueue({
+    concurrency: 4,
+    maxQueueSize: 10,
+    retries: 0,
+    retryDelay: 0,
+    shutdownTimeout: 30000,
+});
 const teacherCreateAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const account = yield teacherModel_1.TeacherModel.findOne({

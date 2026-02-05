@@ -18,54 +18,13 @@ import {
 import jwt from "jsonwebtoken";
 import { AuthenticatedTeacher, TeacherModel } from "../models/teacherModel";
 
-const accountQueue = new ConcurrentJobQueue(4, 10);
-// export const createAccount = async (req: Request, res: Response) => {
-//   try {
-//     const body: IStudent = req.body;
-
-//     const existing = await StudentModel.findOne({
-//       $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
-//     });
-
-//     if (existing) {
-//       return res.status(400).send("Account already exists");
-//     }
-
-//     res.send("Account is being created");
-//     queue
-//       .enqueue(async () => {
-//         const student = new StudentModel(body);
-//         await student.save();
-
-//         const activationLink = `http://localhost:5173/activate/${student._id}`;
-
-//         await sendEmailFunc(
-//           student.email,
-//           "Activate your account",
-//           notificationEmailTemplate(
-//             `${student.firstName} ${student.lastName}`,
-//             activationLink
-//           )
-//         );
-//       })
-//       .then(() => {
-//         // res.status(200).send("Account created successfully");
-//       })
-//       .catch((err) => {
-//         console.error("Queue job failed:", err);
-//         // res.status(500).send("Error creating account");
-//       });
-//   } catch (error) {
-//     console.error("Request error:", error);
-//     res.status(500).send("Internal server error");
-//   }
-// };
-
-//Verify Email
-
-//Verify Account
-
-//Login
+const accountQueue = new ConcurrentJobQueue({
+  concurrency: 5,
+  maxQueueSize: 10,
+  retries: 3,
+  retryDelay: 1000,
+  shutdownTimeout: 30000,
+});
 
 export const createAccount = async (req: Request, res: Response) => {
   const existingAccount = await StudentModel.findOne({
