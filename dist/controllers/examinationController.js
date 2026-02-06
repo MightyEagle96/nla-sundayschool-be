@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleAssessmentScore = exports.saveResponses = exports.shuffleArray = exports.fetchQuestions = exports.updateDuration = exports.toggleActivation = exports.viewExamination = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
+exports.getExamTranscript = exports.generateExamTranscript = exports.handleAssessmentScore = exports.saveResponses = exports.shuffleArray = exports.fetchQuestions = exports.updateDuration = exports.toggleActivation = exports.viewResults = exports.viewExamination = exports.viewActiveExamination = exports.deleteExamination = exports.viewExaminations = exports.createExamination = void 0;
 const examinationModel_1 = __importDefault(require("../models/examinationModel"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const DataQueue_1 = require("../utils/DataQueue");
@@ -121,15 +121,58 @@ const deleteExamination = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.deleteExamination = deleteExamination;
 const viewActiveExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const examination = yield examinationModel_1.default.findOne({ active: true });
-    res.send(examination);
+    if (!req.student) {
+        return res.status(403).send("This route is only accessible by students");
+    }
+    const examination = yield examinationModel_1.default.findOne({ active: true }).lean();
+    if (!examination) {
+        return res.status(404).send("No active examination found");
+    }
+    const hasTakenThisExamination = yield candidateResponses_1.default.exists({
+        student: req.student._id,
+        examination: examination._id,
+    });
+    res.send(Object.assign(Object.assign({}, examination), { hasTakenThisExamination: hasTakenThisExamination ? true : false }));
 });
 exports.viewActiveExamination = viewActiveExamination;
 const viewExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.student) {
+        return res.status(403).send("This route is only accessible by students");
+    }
     const examination = yield examinationModel_1.default.findById(req.query.id);
+    if (!examination) {
+        return res.status(404).send("Examination not found");
+    }
+    const hasTakenThisExamination = yield candidateResponses_1.default.exists({
+        student: req.student._id,
+        examination: examination._id,
+    });
+    if (hasTakenThisExamination) {
+        return res.status(400).send("You have already taken this examination");
+    }
     res.send(examination);
 });
 exports.viewExamination = viewExamination;
+const viewResults = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const responses = yield candidateResponses_1.default.find({
+            student: (_a = req.student) === null || _a === void 0 ? void 0 : _a._id,
+        })
+            .select({ answers: 0 })
+            .populate("examination", "title")
+            .lean();
+        const mapped = responses.map((response, id) => {
+            return Object.assign(Object.assign({}, response), { id: id + 1 });
+        });
+        res.send(mapped);
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.viewResults = viewResults;
 const toggleActivation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const examination = yield examinationModel_1.default.findOne({ _id: req.query.id });
@@ -258,3 +301,69 @@ const handleAssessmentScore = (body) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.handleAssessmentScore = handleAssessmentScore;
+const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function* ({ examination, student, questionCategory, }) {
+    console.log({
+        examination,
+        student,
+        questionCategory,
+    });
+    const responseDoc = yield candidateResponses_1.default.findOne({
+        examination,
+        student,
+        questionCategory,
+    }).lean();
+    if (!responseDoc) {
+        throw new Error("Candidate response not found");
+    }
+    const questionBank = yield questionBankModel_1.default
+        .findOne({
+        examination,
+    })
+        .lean();
+    if (!questionBank) {
+        throw new Error("Question bank not found");
+    }
+    const questions = questionBank.questions.filter((q) => q.classCategory.toLowerCase() === questionCategory.toLowerCase());
+    const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
+    const transcript = responseDoc.answers.map((ans) => {
+        const q = questionMap.get(ans.questionId);
+        if (!q)
+            return null;
+        return {
+            questionId: q._id,
+            question: q.question,
+            options: q.options,
+            selectedAnswer: ans.selectedOption,
+            correctAnswer: q.correctAnswer,
+            isCorrect: ans.selectedOption === q.correctAnswer,
+        };
+    });
+    return {
+        examination,
+        student,
+        category: questionCategory,
+        score: responseDoc.score,
+        totalQuestions: questions.length,
+        transcript: transcript.filter(Boolean),
+    };
+});
+exports.generateExamTranscript = generateExamTranscript;
+const getExamTranscript = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    try {
+        if (!req.student) {
+            return res.sendStatus(401);
+        }
+        const data = yield (0, exports.generateExamTranscript)({
+            examination: req.query.examination,
+            student: (_a = req.student) === null || _a === void 0 ? void 0 : _a._id.toString(),
+            questionCategory: (_b = req.student) === null || _b === void 0 ? void 0 : _b.classCategory,
+        });
+        res.json(data);
+    }
+    catch (err) {
+        console.log(err);
+        res.status(400).json({ message: err.message });
+    }
+});
+exports.getExamTranscript = getExamTranscript;

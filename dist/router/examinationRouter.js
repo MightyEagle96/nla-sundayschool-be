@@ -12,9 +12,11 @@ examinationRouter
     .get("/view", examinationController_1.viewExaminations)
     .get("/delete", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.deleteExamination)
     .get("/toggleexamination", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
-    .get("/viewactiveexamination", examinationController_1.viewActiveExamination)
-    .get("/viewexamination", examinationController_1.viewExamination)
+    .get("/viewactiveexamination", jwtController_1.authenticateToken, examinationController_1.viewActiveExamination)
+    .get("/viewexamination", jwtController_1.authenticateToken, examinationController_1.viewExamination)
+    .get("/results", jwtController_1.authenticateToken, examinationController_1.viewResults)
     .patch("/updateduration", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.updateDuration)
     .get("/toggleactivation", jwtController_1.authenticateToken, accountController_1.restrictToAdmin, examinationController_1.toggleActivation)
     .get("/fetchquestions", jwtController_1.authenticateToken, examinationController_1.fetchQuestions)
-    .post("/saveresponses", jwtController_1.authenticateToken, examinationController_1.saveResponses);
+    .post("/saveresponses", jwtController_1.authenticateToken, examinationController_1.saveResponses)
+    .get("/examtranscript", jwtController_1.authenticateToken, examinationController_1.getExamTranscript);

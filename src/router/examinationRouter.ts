@@ -4,12 +4,14 @@ import {
   createExamination,
   deleteExamination,
   fetchQuestions,
+  getExamTranscript,
   saveResponses,
   toggleActivation,
   updateDuration,
   viewActiveExamination,
   viewExamination,
   viewExaminations,
+  viewResults,
 } from "../controllers/examinationController";
 import { restrictToAdmin } from "../controllers/accountController";
 
@@ -25,8 +27,9 @@ examinationRouter
     restrictToAdmin,
     toggleActivation,
   )
-  .get("/viewactiveexamination", viewActiveExamination)
-  .get("/viewexamination", viewExamination)
+  .get("/viewactiveexamination", authenticateToken, viewActiveExamination)
+  .get("/viewexamination", authenticateToken, viewExamination)
+  .get("/results", authenticateToken, viewResults)
   .patch("/updateduration", authenticateToken, restrictToAdmin, updateDuration)
   .get(
     "/toggleactivation",
@@ -36,6 +39,7 @@ examinationRouter
   )
 
   .get("/fetchquestions", authenticateToken, fetchQuestions)
-  .post("/saveresponses", authenticateToken, saveResponses);
+  .post("/saveresponses", authenticateToken, saveResponses)
+  .get("/examtranscript", authenticateToken, getExamTranscript);
 
 export { examinationRouter };

@@ -5,6 +5,7 @@ import questionBankModel from "../models/questionBankModel";
 import { AuthenticatedStudent } from "../models/studentModel";
 import { ConcurrentJobQueue } from "../utils/DataQueue";
 import CandidateResponses, { IResponses } from "../models/candidateResponses";
+import e from "cors";
 
 export const createExamination = async (
   req: AuthenticatedTeacher,
@@ -132,15 +133,74 @@ export const deleteExamination = async (
   res.send("Examination deleted");
 };
 
-export const viewActiveExamination = async (req: Request, res: Response) => {
-  const examination = await examinationModel.findOne({ active: true });
+export const viewActiveExamination = async (
+  req: AuthenticatedStudent,
+  res: Response,
+) => {
+  if (!req.student) {
+    return res.status(403).send("This route is only accessible by students");
+  }
+  const examination = await examinationModel.findOne({ active: true }).lean();
+
+  if (!examination) {
+    return res.status(404).send("No active examination found");
+  }
+
+  const hasTakenThisExamination = await CandidateResponses.exists({
+    student: req.student._id,
+    examination: examination._id,
+  });
+  res.send({
+    ...examination,
+    hasTakenThisExamination: hasTakenThisExamination ? true : false,
+  });
+};
+
+export const viewExamination = async (
+  req: AuthenticatedStudent,
+  res: Response,
+) => {
+  if (!req.student) {
+    return res.status(403).send("This route is only accessible by students");
+  }
+  const examination = await examinationModel.findById(req.query.id);
+
+  if (!examination) {
+    return res.status(404).send("Examination not found");
+  }
+
+  const hasTakenThisExamination = await CandidateResponses.exists({
+    student: req.student._id,
+    examination: examination._id,
+  });
+
+  if (hasTakenThisExamination) {
+    return res.status(400).send("You have already taken this examination");
+  }
+
   res.send(examination);
 };
 
-export const viewExamination = async (req: Request, res: Response) => {
-  const examination = await examinationModel.findById(req.query.id);
+export const viewResults = async (req: AuthenticatedStudent, res: Response) => {
+  try {
+    const responses = await CandidateResponses.find({
+      student: req.student?._id,
+    })
+      .select({ answers: 0 })
+      .populate("examination", "title")
+      .lean();
 
-  res.send(examination);
+    const mapped = responses.map((response, id) => {
+      return {
+        ...response,
+        id: id + 1,
+      };
+    });
+    res.send(mapped);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 };
 
 export const toggleActivation = async (req: Request, res: Response) => {
@@ -307,5 +367,92 @@ export const handleAssessmentScore = async (body: IResponses) => {
     );
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const generateExamTranscript = async ({
+  examination,
+  student,
+  questionCategory,
+}: {
+  examination: string;
+  student: string;
+  questionCategory: string;
+}) => {
+  console.log({
+    examination,
+    student,
+    questionCategory,
+  });
+  const responseDoc = await CandidateResponses.findOne({
+    examination,
+    student,
+    questionCategory,
+  }).lean();
+
+  if (!responseDoc) {
+    throw new Error("Candidate response not found");
+  }
+
+  const questionBank = await questionBankModel
+    .findOne({
+      examination,
+    })
+    .lean();
+
+  if (!questionBank) {
+    throw new Error("Question bank not found");
+  }
+
+  const questions = questionBank.questions.filter(
+    (q: any) =>
+      q.classCategory.toLowerCase() === questionCategory.toLowerCase(),
+  );
+
+  const questionMap = new Map(questions.map((q: any) => [q._id.toString(), q]));
+
+  const transcript = responseDoc.answers.map((ans: any) => {
+    const q = questionMap.get(ans.questionId);
+
+    if (!q) return null;
+
+    return {
+      questionId: q._id,
+      question: q.question,
+      options: q.options,
+      selectedAnswer: ans.selectedOption,
+      correctAnswer: q.correctAnswer,
+      isCorrect: ans.selectedOption === q.correctAnswer,
+    };
+  });
+
+  return {
+    examination,
+    student,
+    category: questionCategory,
+    score: responseDoc.score,
+    totalQuestions: questions.length,
+    transcript: transcript.filter(Boolean),
+  };
+};
+
+export const getExamTranscript = async (
+  req: AuthenticatedStudent,
+  res: Response,
+) => {
+  try {
+    if (!req.student) {
+      return res.sendStatus(401);
+    }
+    const data = await generateExamTranscript({
+      examination: req.query.examination as string,
+      student: req.student?._id.toString() as string,
+      questionCategory: req.student?.classCategory as string,
+    });
+
+    res.json(data);
+  } catch (err: any) {
+    console.log(err);
+    res.status(400).json({ message: err.message });
   }
 };
