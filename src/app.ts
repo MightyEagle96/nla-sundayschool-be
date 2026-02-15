@@ -48,12 +48,12 @@ app
 
   .use(express.json({ limit: "50mb" }))
 
-  .use(express.static(path.join(__dirname, "client")))
+  .use(express.static(path.join(__dirname, "build")))
 
   .use("/api", appRouter)
 
   .get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "client", "index.html"));
+    res.sendFile(path.join(__dirname, "build", "index.html"));
   })
 
   .listen(4000, "0.0.0.0", () => {
