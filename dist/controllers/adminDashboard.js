@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createClass = exports.adminDashboard = exports.yayaClasses = exports.adultClasses = void 0;
+exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = exports.yayaClasses = exports.adultClasses = void 0;
 const studentModel_1 = require("../models/studentModel");
 const teacherModel_1 = require("../models/teacherModel");
 const classModel_1 = __importDefault(require("../models/classModel"));
+const classCategoryModel_1 = __importDefault(require("../models/classCategoryModel"));
 exports.adultClasses = [
     "grace",
     "mercy",
@@ -60,3 +61,37 @@ const createClass = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.createClass = createClass;
+const classOverview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.classOverview = classOverview;
+const addClassCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const existingClass = yield classCategoryModel_1.default.findOne({
+            name: req.body.name,
+        });
+        if (existingClass) {
+            return res.status(400).send("Class category already exists");
+        }
+        yield classCategoryModel_1.default.create(req.body);
+        res.send("Class category created");
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.addClassCategory = addClassCategory;
+const viewClassCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const classCategories = yield classCategoryModel_1.default.find();
+        res.send(classCategories);
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.viewClassCategories = viewClassCategories;

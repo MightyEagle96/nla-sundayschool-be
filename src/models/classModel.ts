@@ -1,14 +1,14 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 
 export interface IClass {
   name: string;
-  classCategory: string;
+  classCategory: Types.ObjectId;
 }
 
 const schema = new Schema<IClass>(
   {
     name: { type: String, lowercase: true },
-    classCategory: { type: String, lowercase: true },
+    classCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
   },
   { timestamps: true },
 );

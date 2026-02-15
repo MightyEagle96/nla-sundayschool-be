@@ -1,8 +1,17 @@
 import { Router } from "express";
-import { adminDashboard, createClass } from "../controllers/adminDashboard";
+import {
+  addClassCategory,
+  adminDashboard,
+  createClass,
+  viewClassCategories,
+} from "../controllers/adminDashboard";
 
 const adminRouter = Router();
 
-adminRouter.get("/dashboard", adminDashboard).post("/createclass", createClass);
+adminRouter
+  .get("/dashboard", adminDashboard)
+  .post("/createclass", createClass)
+  .get("/classcategories", viewClassCategories)
+  .post("/addclasscategory", addClassCategory);
 
 export default adminRouter;
