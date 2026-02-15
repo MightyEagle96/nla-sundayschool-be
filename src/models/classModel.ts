@@ -7,8 +7,8 @@ export interface IClass {
 
 const schema = new Schema<IClass>(
   {
-    name: { type: String },
-    classCategory: { type: String },
+    name: { type: String, lowercase: true },
+    classCategory: { type: String, lowercase: true },
   },
   { timestamps: true },
 );
