@@ -17,6 +17,7 @@ import {
 } from "./jwtController";
 import jwt from "jsonwebtoken";
 import { AuthenticatedTeacher, TeacherModel } from "../models/teacherModel";
+import AdminModel, { IAdmin } from "../models/adminModel";
 
 const accountQueue = new ConcurrentJobQueue({
   concurrency: 5,
@@ -92,14 +93,7 @@ export const loginAccount = async (req: Request, res: Response) => {
 };
 
 export const myProfile = async (req: JointInterface, res: Response) => {
-  if (req.student) {
-    res.send(req.student);
-  }
-
-  if (req.teacher) {
-    req.teacher.role === "teacher";
-    res.send(req.teacher);
-  }
+  res.send(req.student || req.teacher || req.admin);
 };
 
 export const logoutAccount = async (req: JointInterface, res: Response) => {
@@ -157,6 +151,8 @@ export const getRefreshToken = async (req: Request, res: Response) => {
 
     const teacher = await TeacherModel.findById(decoded._id);
 
+    const admin = await AdminModel.findById(decoded._id);
+
     if (student) {
       const accessToken = generateToken({
         _id: student._id,
@@ -199,6 +195,35 @@ export const getRefreshToken = async (req: Request, res: Response) => {
         _id: teacher._id,
         email: teacher.email,
         role: "teacher",
+      });
+
+      return res
+        .cookie(tokens.auth_token, accessToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60, // 1h
+        })
+        .cookie(tokens.refresh_token, refreshToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+        })
+        .send("Logged In");
+    }
+
+    if (admin) {
+      const accessToken = generateToken({
+        _id: admin._id,
+        email: admin.email,
+        role: "admin",
+      });
+
+      const refreshToken = generateRefreshToken({
+        _id: admin._id,
+        email: admin.email,
+        role: "admin",
       });
 
       return res
@@ -271,5 +296,71 @@ export const viewCandidates = async (req: Request, res: Response) => {
     }
   } catch (error) {
     res.sendStatus(500);
+  }
+};
+
+//admin section
+export const createAdminAccount = async (req: Request, res: Response) => {
+  try {
+    const body: IAdmin = req.body;
+
+    const existingEmail = await AdminModel.findOne({ email: body.email });
+
+    if (existingEmail) {
+      throw new Error("Admin account already exists");
+      //return res.status(400).send("Account already exists");
+    }
+    await AdminModel.create(body);
+
+    res.send("Account created");
+  } catch (error: any) {
+    console.log(new Error(error));
+    res.status(500).send(new Error(error).message);
+  }
+};
+
+export const loginAdminAccount = async (req: Request, res: Response) => {
+  try {
+    const body: IAdmin = req.body;
+    const admin = await AdminModel.findOne({ email: body.email });
+
+    if (!admin) {
+      return res.status(400).send("Email or password incorrect");
+    }
+
+    const result = await bcrypt.compare(body.password, admin.password);
+
+    if (!result) {
+      return res.status(400).send("Email or password incorrect");
+    }
+
+    const accessToken = generateToken({
+      _id: admin._id,
+      email: admin.email,
+      role: "admin",
+    });
+
+    const refreshToken = generateRefreshToken({
+      _id: admin._id,
+      email: admin.email,
+      role: "admin",
+    });
+
+    res
+      .cookie(tokens.auth_token, accessToken, {
+        httpOnly: false,
+        secure: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 1000 * 60 * 60, // 1h
+      })
+      .cookie(tokens.refresh_token, refreshToken, {
+        httpOnly: false,
+        secure: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+      })
+      .send("Logged In");
+  } catch (error: any) {
+    res.status(500).send(new Error(error).message);
   }
 };

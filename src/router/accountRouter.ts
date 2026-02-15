@@ -1,8 +1,10 @@
 import { Router } from "express";
 import {
   createAccount,
+  createAdminAccount,
   getRefreshToken,
   loginAccount,
+  loginAdminAccount,
   logout,
   myProfile,
   viewCandidates,
@@ -28,6 +30,10 @@ accountRouter
   .get("/refresh", getRefreshToken)
 
   .get("/candidates", authenticateToken, viewCandidates)
+
+  //admin
+  .post("/admin/signup", createAdminAccount)
+  .post("/admin/login", loginAdminAccount)
 
   .get("*", (req, res) => {
     res.status(404).send("Not found");

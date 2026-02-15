@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewCandidates = exports.restrictToAdmin = exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
+exports.loginAdminAccount = exports.createAdminAccount = exports.viewCandidates = exports.restrictToAdmin = exports.getRefreshToken = exports.logout = exports.logoutAccount = exports.myProfile = exports.loginAccount = exports.createAccount = void 0;
 //Create Account
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentModel_1 = require("../models/studentModel");
@@ -20,6 +20,7 @@ const DataQueue_1 = require("../utils/DataQueue");
 const jwtController_1 = require("./jwtController");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const teacherModel_1 = require("../models/teacherModel");
+const adminModel_1 = __importDefault(require("../models/adminModel"));
 const accountQueue = new DataQueue_1.ConcurrentJobQueue({
     concurrency: 5,
     maxQueueSize: 10,
@@ -88,13 +89,7 @@ const loginAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.loginAccount = loginAccount;
 const myProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (req.student) {
-        res.send(req.student);
-    }
-    if (req.teacher) {
-        req.teacher.role === "teacher";
-        res.send(req.teacher);
-    }
+    res.send(req.student || req.teacher || req.admin);
 });
 exports.myProfile = myProfile;
 const logoutAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -136,6 +131,7 @@ const getRefreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function
         const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN);
         const student = yield studentModel_1.StudentModel.findById(decoded._id);
         const teacher = yield teacherModel_1.TeacherModel.findById(decoded._id);
+        const admin = yield adminModel_1.default.findById(decoded._id);
         if (student) {
             const accessToken = (0, jwtController_1.generateToken)({
                 _id: student._id,
@@ -174,6 +170,32 @@ const getRefreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function
                 _id: teacher._id,
                 email: teacher.email,
                 role: "teacher",
+            });
+            return res
+                .cookie(jwtController_1.tokens.auth_token, accessToken, {
+                httpOnly: false,
+                secure: true,
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                maxAge: 1000 * 60 * 60, // 1h
+            })
+                .cookie(jwtController_1.tokens.refresh_token, refreshToken, {
+                httpOnly: false,
+                secure: true,
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+            })
+                .send("Logged In");
+        }
+        if (admin) {
+            const accessToken = (0, jwtController_1.generateToken)({
+                _id: admin._id,
+                email: admin.email,
+                role: "admin",
+            });
+            const refreshToken = (0, jwtController_1.generateRefreshToken)({
+                _id: admin._id,
+                email: admin.email,
+                role: "admin",
             });
             return res
                 .cookie(jwtController_1.tokens.auth_token, accessToken, {
@@ -241,3 +263,62 @@ const viewCandidates = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.viewCandidates = viewCandidates;
+//admin section
+const createAdminAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const body = req.body;
+        const existingEmail = yield adminModel_1.default.findOne({ email: body.email });
+        if (existingEmail) {
+            throw new Error("Admin account already exists");
+            //return res.status(400).send("Account already exists");
+        }
+        yield adminModel_1.default.create(body);
+        res.send("Account created");
+    }
+    catch (error) {
+        console.log(new Error(error));
+        res.status(500).send(new Error(error).message);
+    }
+});
+exports.createAdminAccount = createAdminAccount;
+const loginAdminAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const body = req.body;
+        const admin = yield adminModel_1.default.findOne({ email: body.email });
+        if (!admin) {
+            return res.status(400).send("Email or password incorrect");
+        }
+        const result = yield bcrypt_1.default.compare(body.password, admin.password);
+        if (!result) {
+            return res.status(400).send("Email or password incorrect");
+        }
+        const accessToken = (0, jwtController_1.generateToken)({
+            _id: admin._id,
+            email: admin.email,
+            role: "admin",
+        });
+        const refreshToken = (0, jwtController_1.generateRefreshToken)({
+            _id: admin._id,
+            email: admin.email,
+            role: "admin",
+        });
+        res
+            .cookie(jwtController_1.tokens.auth_token, accessToken, {
+            httpOnly: false,
+            secure: true,
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 1000 * 60 * 60, // 1h
+        })
+            .cookie(jwtController_1.tokens.refresh_token, refreshToken, {
+            httpOnly: false,
+            secure: true,
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+        })
+            .send("Logged In");
+    }
+    catch (error) {
+        res.status(500).send(new Error(error).message);
+    }
+});
+exports.loginAdminAccount = loginAdminAccount;

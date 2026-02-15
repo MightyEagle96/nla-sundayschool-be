@@ -7,6 +7,7 @@ import {
   StudentModel,
 } from "../models/studentModel";
 import { ITeacher, TeacherModel } from "../models/teacherModel";
+import AdminModel, { IAdmin } from "../models/adminModel";
 
 dotenv.config();
 
@@ -30,12 +31,13 @@ export function generateRefreshToken(payload: object) {
 export interface JointInterface extends Request {
   student?: IStudent;
   teacher?: ITeacher;
+  admin?: IAdmin;
 }
 
 export async function authenticateToken(
   req: JointInterface,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     // Get token from cookie
@@ -48,7 +50,7 @@ export async function authenticateToken(
     // Verify JWT
     const decoded = jwt.verify(
       token,
-      process.env.ACCESS_TOKEN as string
+      process.env.ACCESS_TOKEN as string,
     ) as JwtPayload;
 
     if (decoded.role === "teacher") {
@@ -67,6 +69,16 @@ export async function authenticateToken(
         return res.status(401).json({ message: "Not authenticated" });
       }
       req.student = student;
+      next();
+      return;
+    }
+
+    if (decoded.role === "admin") {
+      const admin = await AdminModel.findById(decoded._id).lean();
+      if (!admin) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      req.admin = admin;
       next();
       return;
     }

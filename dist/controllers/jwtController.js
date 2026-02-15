@@ -20,6 +20,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const studentModel_1 = require("../models/studentModel");
 const teacherModel_1 = require("../models/teacherModel");
+const adminModel_1 = __importDefault(require("../models/adminModel"));
 dotenv_1.default.config();
 exports.tokens = {
     auth_token: "auth_token",
@@ -60,6 +61,15 @@ function authenticateToken(req, res, next) {
                     return res.status(401).json({ message: "Not authenticated" });
                 }
                 req.student = student;
+                next();
+                return;
+            }
+            if (decoded.role === "admin") {
+                const admin = yield adminModel_1.default.findById(decoded._id).lean();
+                if (!admin) {
+                    return res.status(401).json({ message: "Not authenticated" });
+                }
+                req.admin = admin;
                 next();
                 return;
             }
