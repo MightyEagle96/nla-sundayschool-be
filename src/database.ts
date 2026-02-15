@@ -5,13 +5,10 @@ dotenv.config();
 
 const environment = process.env.NODE_ENV || "development";
 
-// const databaseURI = (
-//   environment === "production"
-//     ? process.env.PROD_DB_URI || "mongodb://mongodb:27017/sundayschool"
-//     : process.env.DEV_DB_URI || "mongodb://localhost:27017/sundayschool"
-// ) as string;
-
-const databaseURI = process.env.MONGO_URI as string;
+const databaseURI =
+  environment === "production"
+    ? (process.env.DATABASE_ONLINE as string)
+    : (process.env.DATABASE_LOCAL as string);
 let isConnected = false;
 
 // console.log({ databaseURI });
