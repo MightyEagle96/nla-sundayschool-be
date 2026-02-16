@@ -13,8 +13,9 @@ const questionBankRouter = (0, express_1.Router)();
 exports.questionBankRouter = questionBankRouter;
 questionBankRouter
     //  .get("/count", viewQuestionBankCount)
+    .post("/createquestionbank", jwtController_1.authenticateToken, questionBankController_1.createQuestionBank)
     .post("/create", jwtController_1.authenticateToken, questionBankController_1.createQuestion)
-    .get("/view", jwtController_1.authenticateToken, questionBankController_1.viewQuestionBank)
+    .get("/view", jwtController_1.authenticateToken, questionBankController_1.getBanksByExamination)
     .post("/upload", jwtController_1.authenticateToken, upload.single("file"), questionBankController_1.uploadQuestionBankFile)
     .get("/delete", jwtController_1.authenticateToken, questionBankController_1.deleteQuestion)
     .get("/deletequestionbank", jwtController_1.authenticateToken, questionBankController_1.deleteQuestionBank)

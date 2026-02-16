@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,12 +45,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateQuestion = exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.viewQuestionBank = exports.createQuestion = exports.classCategory = void 0;
+exports.getBanksByExamination = exports.createQuestionBank = exports.updateQuestion = exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.createQuestion = exports.classCategory = void 0;
 const convert_excel_to_json_1 = __importDefault(require("convert-excel-to-json"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = require("fs");
-const mongoose_1 = require("mongoose");
+const mongoose_1 = __importStar(require("mongoose"));
 exports.classCategory = {
     yaya: "yaya",
     adult: "adult",
@@ -44,48 +77,6 @@ const createQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.createQuestion = createQuestion;
-const viewQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // try {
-    //   const questionBank = await questionBankModel
-    //     .findOne({
-    //       examination: req.query.examination,
-    //     })
-    //     .lean();
-    //   if (questionBank) {
-    //     const mapped = questionBank.questions.map((question, id) => {
-    //       return {
-    //         ...question,
-    //         id: id + 1,
-    //       };
-    //     });
-    //     const yayaQuestions = mapped.filter(
-    //       (question) => question.classCategory === classCategory.yaya
-    //     ).length;
-    //     const adultQuestions = mapped.filter(
-    //       (question) => question.classCategory === classCategory.adult
-    //     ).length;
-    //     return res.send({
-    //       questions: mapped,
-    //       questionsCount: {
-    //         yayaQuestions,
-    //         adultQuestions,
-    //         totalQuestions: mapped.length,
-    //       },
-    //     });
-    //   }
-    //   res.send({
-    //     questions: [],
-    //     questionsCount: {
-    //       yayaQuestions: 0,
-    //       adultQuestions: 0,
-    //       totalQuestions: 0,
-    //     },
-    //   });
-    // } catch (error) {
-    //   res.sendStatus(500);
-    // }
-});
-exports.viewQuestionBank = viewQuestionBank;
 const uploadQuestionBankFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     console.log("📤 Uploading question file...");
@@ -205,3 +196,71 @@ const updateQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateQuestion = updateQuestion;
+const createQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        //existing question bank
+        const existing = yield questionBankModel_1.default.findOne({
+            examination: req.body.examination,
+            classCategory: req.body.classCategory,
+        });
+        if (existing) {
+            return res.status(400).send("Question bank already exists");
+        }
+        yield questionBankModel_1.default.create(req.body);
+        res.send("Question bank created successfully");
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.createQuestionBank = createQuestionBank;
+const getBanksByExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const examId = req.query.examination;
+        if (!examId) {
+            return res.status(400).json({ message: "Examination id required" });
+        }
+        const data = yield questionBankModel_1.default.aggregate([
+            {
+                $match: {
+                    examination: new mongoose_1.default.Types.ObjectId(examId),
+                },
+            },
+            // Populate classCategory
+            {
+                $lookup: {
+                    from: "classcategories", // confirm actual collection name
+                    localField: "classCategory",
+                    foreignField: "_id",
+                    as: "classCategory",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$classCategory",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            // Compute question size
+            {
+                $addFields: {
+                    questionCount: { $size: "$questions" },
+                },
+            },
+            // Remove heavy payload
+            {
+                $project: {
+                    questions: 0,
+                },
+            },
+        ]);
+        const mapped = data.map((bank, i) => {
+            return Object.assign(Object.assign({}, bank), { id: i + 1 });
+        });
+        res.json(mapped);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Failed to fetch question banks" });
+    }
+});
+exports.getBanksByExamination = getBanksByExamination;

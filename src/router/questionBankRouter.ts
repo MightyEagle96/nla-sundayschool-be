@@ -1,11 +1,12 @@
 import { Router } from "express";
 import {
   createQuestion,
+  createQuestionBank,
   deleteQuestion,
   deleteQuestionBank,
+  getBanksByExamination,
   updateQuestion,
   uploadQuestionBankFile,
-  viewQuestionBank,
 } from "../controllers/questionBankController";
 import { authenticateToken } from "../controllers/jwtController";
 import multer from "multer";
@@ -16,13 +17,14 @@ const questionBankRouter = Router();
 
 questionBankRouter
   //  .get("/count", viewQuestionBankCount)
+  .post("/createquestionbank", authenticateToken, createQuestionBank)
   .post("/create", authenticateToken, createQuestion)
-  .get("/view", authenticateToken, viewQuestionBank)
+  .get("/view", authenticateToken, getBanksByExamination)
   .post(
     "/upload",
     authenticateToken,
     upload.single("file"),
-    uploadQuestionBankFile
+    uploadQuestionBankFile,
   )
   .get("/delete", authenticateToken, deleteQuestion)
   .get("/deletequestionbank", authenticateToken, deleteQuestionBank)
