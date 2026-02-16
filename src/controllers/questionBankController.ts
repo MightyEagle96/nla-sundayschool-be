@@ -76,12 +76,11 @@ export const uploadQuestionBankFile = async (req: Request, res: Response) => {
     });
 
     await questionBankModel.updateOne(
-      { examination: req.query.examination },
-      { $push: { questions: { $each: finalData } } },
-      { upsert: true },
+      { _id: req.query._id },
+      {
+        questions: finalData,
+      },
     );
-
-    //console.log(allRows);
 
     res.send("File uploaded successfully");
 

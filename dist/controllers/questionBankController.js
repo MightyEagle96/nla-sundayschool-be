@@ -110,8 +110,9 @@ const uploadQuestionBankFile = (req, res) => __awaiter(void 0, void 0, void 0, f
                 classCategory: req.query.classCategory,
             };
         });
-        yield questionBankModel_1.default.updateOne({ examination: req.query.examination }, { $push: { questions: { $each: finalData } } }, { upsert: true });
-        //console.log(allRows);
+        yield questionBankModel_1.default.updateOne({ _id: req.query._id }, {
+            questions: finalData,
+        });
         res.send("File uploaded successfully");
         yield fs_1.promises.unlink(finalPath);
     }
