@@ -5,7 +5,7 @@ const { Schema, model } = mongoose;
 
 interface IQuestion {
   question: string;
-  classCategory: string;
+
   options: [string];
   correctAnswer: string;
   authoredBy: Types.ObjectId;
@@ -19,6 +19,7 @@ interface IQuestionBank {
   dateTaken: Date;
   bankName: string;
   examination: Types.ObjectId;
+  classCategory: Types.ObjectId;
 }
 
 const schema = new Schema<IQuestionBank>(
@@ -32,13 +33,14 @@ const schema = new Schema<IQuestionBank>(
         question: String,
         options: [String],
         correctAnswer: String,
-        classCategory: String,
+
         authoredBy: { type: Schema.Types.ObjectId, ref: "Teacher" },
       },
     ],
+    classCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
     examination: { type: Schema.Types.ObjectId, ref: "Examination" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default model("QuestionBank", schema);

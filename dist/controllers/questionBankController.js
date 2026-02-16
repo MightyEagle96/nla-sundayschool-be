@@ -45,39 +45,45 @@ const createQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.createQuestion = createQuestion;
 const viewQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const questionBank = yield questionBankModel_1.default
-            .findOne({
-            examination: req.query.examination,
-        })
-            .lean();
-        if (questionBank) {
-            const mapped = questionBank.questions.map((question, id) => {
-                return Object.assign(Object.assign({}, question), { id: id + 1 });
-            });
-            const yayaQuestions = mapped.filter((question) => question.classCategory === exports.classCategory.yaya).length;
-            const adultQuestions = mapped.filter((question) => question.classCategory === exports.classCategory.adult).length;
-            return res.send({
-                questions: mapped,
-                questionsCount: {
-                    yayaQuestions,
-                    adultQuestions,
-                    totalQuestions: mapped.length,
-                },
-            });
-        }
-        res.send({
-            questions: [],
-            questionsCount: {
-                yayaQuestions: 0,
-                adultQuestions: 0,
-                totalQuestions: 0,
-            },
-        });
-    }
-    catch (error) {
-        res.sendStatus(500);
-    }
+    // try {
+    //   const questionBank = await questionBankModel
+    //     .findOne({
+    //       examination: req.query.examination,
+    //     })
+    //     .lean();
+    //   if (questionBank) {
+    //     const mapped = questionBank.questions.map((question, id) => {
+    //       return {
+    //         ...question,
+    //         id: id + 1,
+    //       };
+    //     });
+    //     const yayaQuestions = mapped.filter(
+    //       (question) => question.classCategory === classCategory.yaya
+    //     ).length;
+    //     const adultQuestions = mapped.filter(
+    //       (question) => question.classCategory === classCategory.adult
+    //     ).length;
+    //     return res.send({
+    //       questions: mapped,
+    //       questionsCount: {
+    //         yayaQuestions,
+    //         adultQuestions,
+    //         totalQuestions: mapped.length,
+    //       },
+    //     });
+    //   }
+    //   res.send({
+    //     questions: [],
+    //     questionsCount: {
+    //       yayaQuestions: 0,
+    //       adultQuestions: 0,
+    //       totalQuestions: 0,
+    //     },
+    //   });
+    // } catch (error) {
+    //   res.sendStatus(500);
+    // }
 });
 exports.viewQuestionBank = viewQuestionBank;
 const uploadQuestionBankFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -14,7 +14,7 @@ export const classCategory = {
 
 export const createQuestion = async (
   req: AuthenticatedTeacher,
-  res: Response
+  res: Response,
 ) => {
   try {
     const questionBank = await questionBankModel.findOne({
@@ -38,47 +38,45 @@ export const createQuestion = async (
 };
 
 export const viewQuestionBank = async (req: Request, res: Response) => {
-  try {
-    const questionBank = await questionBankModel
-      .findOne({
-        examination: req.query.examination,
-      })
-      .lean();
-
-    if (questionBank) {
-      const mapped = questionBank.questions.map((question, id) => {
-        return {
-          ...question,
-          id: id + 1,
-        };
-      });
-
-      const yayaQuestions = mapped.filter(
-        (question) => question.classCategory === classCategory.yaya
-      ).length;
-      const adultQuestions = mapped.filter(
-        (question) => question.classCategory === classCategory.adult
-      ).length;
-      return res.send({
-        questions: mapped,
-        questionsCount: {
-          yayaQuestions,
-          adultQuestions,
-          totalQuestions: mapped.length,
-        },
-      });
-    }
-    res.send({
-      questions: [],
-      questionsCount: {
-        yayaQuestions: 0,
-        adultQuestions: 0,
-        totalQuestions: 0,
-      },
-    });
-  } catch (error) {
-    res.sendStatus(500);
-  }
+  // try {
+  //   const questionBank = await questionBankModel
+  //     .findOne({
+  //       examination: req.query.examination,
+  //     })
+  //     .lean();
+  //   if (questionBank) {
+  //     const mapped = questionBank.questions.map((question, id) => {
+  //       return {
+  //         ...question,
+  //         id: id + 1,
+  //       };
+  //     });
+  //     const yayaQuestions = mapped.filter(
+  //       (question) => question.classCategory === classCategory.yaya
+  //     ).length;
+  //     const adultQuestions = mapped.filter(
+  //       (question) => question.classCategory === classCategory.adult
+  //     ).length;
+  //     return res.send({
+  //       questions: mapped,
+  //       questionsCount: {
+  //         yayaQuestions,
+  //         adultQuestions,
+  //         totalQuestions: mapped.length,
+  //       },
+  //     });
+  //   }
+  //   res.send({
+  //     questions: [],
+  //     questionsCount: {
+  //       yayaQuestions: 0,
+  //       adultQuestions: 0,
+  //       totalQuestions: 0,
+  //     },
+  //   });
+  // } catch (error) {
+  //   res.sendStatus(500);
+  // }
 };
 
 export const uploadQuestionBankFile = async (req: Request, res: Response) => {
@@ -127,7 +125,7 @@ export const uploadQuestionBankFile = async (req: Request, res: Response) => {
     await questionBankModel.updateOne(
       { examination: req.query.examination },
       { $push: { questions: { $each: finalData } } },
-      { upsert: true }
+      { upsert: true },
     );
 
     //console.log(allRows);
@@ -164,12 +162,12 @@ function resolveCorrectAnswer(raw: string, options: string[]): string {
 
   const partial = options.find(
     (opt) =>
-      opt.toLowerCase().includes(lower) || lower.includes(opt.toLowerCase())
+      opt.toLowerCase().includes(lower) || lower.includes(opt.toLowerCase()),
   );
   if (partial) return partial;
 
   console.warn(
-    `Could not resolve answer "${raw}". Defaulting to first option.`
+    `Could not resolve answer "${raw}". Defaulting to first option.`,
   );
   return options[0];
 }
@@ -185,7 +183,7 @@ export const deleteQuestion = async (req: Request, res: Response) => {
         $pull: {
           questions: { _id: new Types.ObjectId(req.query.question as string) },
         },
-      }
+      },
     );
     res.send("Question bank deleted successfully");
   } catch (error) {
@@ -204,7 +202,7 @@ export const deleteQuestionBank = async (req: Request, res: Response) => {
 
 export const updateQuestion = async (
   req: AuthenticatedTeacher,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { questionId, examination } = req.query;
@@ -218,7 +216,7 @@ export const updateQuestion = async (
           "questions.$.options": options,
           "questions.$.correctAnswer": correctAnswer,
         },
-      }
+      },
     );
 
     res.send("Question updated successfully");

@@ -15,10 +15,10 @@ const schema = new Schema({
             question: String,
             options: [String],
             correctAnswer: String,
-            classCategory: String,
             authoredBy: { type: Schema.Types.ObjectId, ref: "Teacher" },
         },
     ],
+    classCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
     examination: { type: Schema.Types.ObjectId, ref: "Examination" },
 }, { timestamps: true });
 exports.default = model("QuestionBank", schema);

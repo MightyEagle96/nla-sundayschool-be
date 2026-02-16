@@ -321,53 +321,46 @@ export const saveResponses = async (
 };
 
 export const handleAssessmentScore = async (body: IResponses) => {
-  try {
-    const questionBank = await questionBankModel.findOne({
-      examination: body.examination,
-    });
-
-    if (!questionBank) return;
-
-    const filteredQuestions = questionBank.questions.filter(
-      (question) =>
-        question.classCategory.toLowerCase() ===
-        body.questionCategory.toLowerCase(),
-    );
-
-    const questionMap = new Map(
-      filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
-    );
-
-    let correct = 0;
-
-    for (const answer of body.answers) {
-      if (questionMap.get(answer.questionId) === answer.selectedOption) {
-        correct++;
-      }
-    }
-
-    const score = Math.round((correct / filteredQuestions.length) * 100);
-
-    await CandidateResponses.findOneAndUpdate(
-      {
-        examination: body.examination,
-        student: body.student,
-        questionCategory: body.questionCategory,
-      },
-      {
-        $set: {
-          ...body,
-          score,
-        },
-      },
-      {
-        upsert: true,
-        new: true,
-      },
-    );
-  } catch (error) {
-    console.log(error);
-  }
+  // try {
+  //   const questionBank = await questionBankModel.findOne({
+  //     examination: body.examination,
+  //   });
+  //   if (!questionBank) return;
+  //   const filteredQuestions = questionBank.questions.filter(
+  //     (question) =>
+  //       question.classCategory.toLowerCase() ===
+  //       body.questionCategory.toLowerCase(),
+  //   );
+  //   const questionMap = new Map(
+  //     filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
+  //   );
+  //   let correct = 0;
+  //   for (const answer of body.answers) {
+  //     if (questionMap.get(answer.questionId) === answer.selectedOption) {
+  //       correct++;
+  //     }
+  //   }
+  //   const score = Math.round((correct / filteredQuestions.length) * 100);
+  //   await CandidateResponses.findOneAndUpdate(
+  //     {
+  //       examination: body.examination,
+  //       student: body.student,
+  //       questionCategory: body.questionCategory,
+  //     },
+  //     {
+  //       $set: {
+  //         ...body,
+  //         score,
+  //       },
+  //     },
+  //     {
+  //       upsert: true,
+  //       new: true,
+  //     },
+  //   );
+  // } catch (error) {
+  //   console.log(error);
+  // }
 };
 
 export const generateExamTranscript = async ({

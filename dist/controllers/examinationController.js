@@ -269,36 +269,46 @@ const saveResponses = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.saveResponses = saveResponses;
 const handleAssessmentScore = (body) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const questionBank = yield questionBankModel_1.default.findOne({
-            examination: body.examination,
-        });
-        if (!questionBank)
-            return;
-        const filteredQuestions = questionBank.questions.filter((question) => question.classCategory.toLowerCase() ===
-            body.questionCategory.toLowerCase());
-        const questionMap = new Map(filteredQuestions.map((q) => [q._id.toString(), q.correctAnswer]));
-        let correct = 0;
-        for (const answer of body.answers) {
-            if (questionMap.get(answer.questionId) === answer.selectedOption) {
-                correct++;
-            }
-        }
-        const score = Math.round((correct / filteredQuestions.length) * 100);
-        yield candidateResponses_1.default.findOneAndUpdate({
-            examination: body.examination,
-            student: body.student,
-            questionCategory: body.questionCategory,
-        }, {
-            $set: Object.assign(Object.assign({}, body), { score }),
-        }, {
-            upsert: true,
-            new: true,
-        });
-    }
-    catch (error) {
-        console.log(error);
-    }
+    // try {
+    //   const questionBank = await questionBankModel.findOne({
+    //     examination: body.examination,
+    //   });
+    //   if (!questionBank) return;
+    //   const filteredQuestions = questionBank.questions.filter(
+    //     (question) =>
+    //       question.classCategory.toLowerCase() ===
+    //       body.questionCategory.toLowerCase(),
+    //   );
+    //   const questionMap = new Map(
+    //     filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
+    //   );
+    //   let correct = 0;
+    //   for (const answer of body.answers) {
+    //     if (questionMap.get(answer.questionId) === answer.selectedOption) {
+    //       correct++;
+    //     }
+    //   }
+    //   const score = Math.round((correct / filteredQuestions.length) * 100);
+    //   await CandidateResponses.findOneAndUpdate(
+    //     {
+    //       examination: body.examination,
+    //       student: body.student,
+    //       questionCategory: body.questionCategory,
+    //     },
+    //     {
+    //       $set: {
+    //         ...body,
+    //         score,
+    //       },
+    //     },
+    //     {
+    //       upsert: true,
+    //       new: true,
+    //     },
+    //   );
+    // } catch (error) {
+    //   console.log(error);
+    // }
 });
 exports.handleAssessmentScore = handleAssessmentScore;
 const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function* ({ examination, student, questionCategory, }) {
