@@ -9,8 +9,8 @@ export interface IStudent {
   password: string;
   isConfirmed: boolean;
   phoneNumber: string;
-  classCategory: string;
-  className: string;
+  classCategory: Types.ObjectId;
+  classData: Types.ObjectId;
   title: string;
   gender: string;
   role: string;
@@ -35,15 +35,15 @@ const studentSchema = new Schema<IStudent>(
     },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },
-    classCategory: { type: String, required: true },
-    className: { type: String, required: true },
+    classCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
+    classData: { type: Schema.Types.ObjectId, ref: "Class" },
     role: { type: String, default: "student" },
     // title: { type: String, required: true },
     gender: { type: String, required: true },
     password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
     disabled: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 studentSchema.index({ email: 1 }, { unique: true });

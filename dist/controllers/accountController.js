@@ -30,10 +30,10 @@ const accountQueue = new DataQueue_1.ConcurrentJobQueue({
 });
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const existingAccount = yield studentModel_1.StudentModel.findOne({
-        email: req.body.email,
+        ["$or"]: [{ email: req.body.email }, { phoneNumber: req.body.phoneNumber }],
     });
     if (existingAccount) {
-        return res.status(400).send("Account already exists");
+        return res.status(400).send("Email or phone number already exists");
     }
     accountQueue.enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
         try {

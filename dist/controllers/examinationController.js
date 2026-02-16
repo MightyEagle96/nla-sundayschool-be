@@ -213,23 +213,23 @@ const fetchQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!questionBank) {
             return res.status(400).send("Question bank not found");
         }
-        const filteredQuestions = questionBank.questions.filter((question) => {
-            var _a;
-            return question.classCategory.toLowerCase() ===
-                ((_a = req.student) === null || _a === void 0 ? void 0 : _a.classCategory.toLowerCase());
-        });
-        if (filteredQuestions.length === 0) {
-            return res.status(400).send("No questions for your class category");
-        }
-        const examQuestions = (0, exports.shuffleArray)(filteredQuestions).map((q) => ({
-            _id: q._id,
-            question: q.question,
-            options: (0, exports.shuffleArray)(q.options),
-        }));
-        res.send({
-            questions: examQuestions,
-            examination,
-        });
+        // const filteredQuestions = questionBank.questions.filter(
+        //   (question) =>
+        //     question.classCategory.toLowerCase() ===
+        //     req.student?.classCategory.toLowerCase(),
+        // );
+        // if (filteredQuestions.length === 0) {
+        //   return res.status(400).send("No questions for your class category");
+        // }
+        // const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
+        //   _id: q._id,
+        //   question: q.question,
+        //   options: shuffleArray(q.options),
+        // }));
+        // res.send({
+        //   questions: examQuestions,
+        //   examination,
+        // });
     }
     catch (error) {
         res.sendStatus(500);
@@ -349,17 +349,16 @@ const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function*
 });
 exports.generateExamTranscript = generateExamTranscript;
 const getExamTranscript = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
     try {
         if (!req.student) {
             return res.sendStatus(401);
         }
-        const data = yield (0, exports.generateExamTranscript)({
-            examination: req.query.examination,
-            student: (_a = req.student) === null || _a === void 0 ? void 0 : _a._id.toString(),
-            questionCategory: (_b = req.student) === null || _b === void 0 ? void 0 : _b.classCategory,
-        });
-        res.json(data);
+        // const data = await generateExamTranscript({
+        //   examination: req.query.examination as string,
+        //   student: req.student?._id.toString() as string,
+        //   // questionCategory: req.student?.classCategory as string,
+        // });
+        // res.json(data);
     }
     catch (err) {
         console.log(err);

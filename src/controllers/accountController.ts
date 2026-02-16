@@ -29,11 +29,11 @@ const accountQueue = new ConcurrentJobQueue({
 
 export const createAccount = async (req: Request, res: Response) => {
   const existingAccount = await StudentModel.findOne({
-    email: req.body.email,
+    ["$or"]: [{ email: req.body.email }, { phoneNumber: req.body.phoneNumber }],
   });
 
   if (existingAccount) {
-    return res.status(400).send("Account already exists");
+    return res.status(400).send("Email or phone number already exists");
   }
 
   accountQueue.enqueue(async () => {

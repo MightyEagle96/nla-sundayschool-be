@@ -254,26 +254,26 @@ export const fetchQuestions = async (
       return res.status(400).send("Question bank not found");
     }
 
-    const filteredQuestions = questionBank.questions.filter(
-      (question) =>
-        question.classCategory.toLowerCase() ===
-        req.student?.classCategory.toLowerCase(),
-    );
+    // const filteredQuestions = questionBank.questions.filter(
+    //   (question) =>
+    //     question.classCategory.toLowerCase() ===
+    //     req.student?.classCategory.toLowerCase(),
+    // );
 
-    if (filteredQuestions.length === 0) {
-      return res.status(400).send("No questions for your class category");
-    }
+    // if (filteredQuestions.length === 0) {
+    //   return res.status(400).send("No questions for your class category");
+    // }
 
-    const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
-      _id: q._id,
-      question: q.question,
-      options: shuffleArray(q.options),
-    }));
+    // const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
+    //   _id: q._id,
+    //   question: q.question,
+    //   options: shuffleArray(q.options),
+    // }));
 
-    res.send({
-      questions: examQuestions,
-      examination,
-    });
+    // res.send({
+    //   questions: examQuestions,
+    //   examination,
+    // });
   } catch (error) {
     res.sendStatus(500);
   }
@@ -444,13 +444,13 @@ export const getExamTranscript = async (
     if (!req.student) {
       return res.sendStatus(401);
     }
-    const data = await generateExamTranscript({
-      examination: req.query.examination as string,
-      student: req.student?._id.toString() as string,
-      questionCategory: req.student?.classCategory as string,
-    });
+    // const data = await generateExamTranscript({
+    //   examination: req.query.examination as string,
+    //   student: req.student?._id.toString() as string,
+    //   // questionCategory: req.student?.classCategory as string,
+    // });
 
-    res.json(data);
+    // res.json(data);
   } catch (err: any) {
     console.log(err);
     res.status(400).json({ message: err.message });
