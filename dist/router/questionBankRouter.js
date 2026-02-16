@@ -13,6 +13,7 @@ const questionBankRouter = (0, express_1.Router)();
 exports.questionBankRouter = questionBankRouter;
 questionBankRouter
     //  .get("/count", viewQuestionBankCount)
+    .get("/viewquestionbank", jwtController_1.authenticateToken, questionBankController_1.getQuestionBank)
     .post("/createquestionbank", jwtController_1.authenticateToken, questionBankController_1.createQuestionBank)
     .post("/create", jwtController_1.authenticateToken, questionBankController_1.createQuestion)
     .get("/view", jwtController_1.authenticateToken, questionBankController_1.getBanksByExamination)

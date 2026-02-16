@@ -1,5 +1,4 @@
 import mongoose, { Types } from "mongoose";
-import { classCategory } from "../controllers/questionBankController";
 
 const { Schema, model } = mongoose;
 

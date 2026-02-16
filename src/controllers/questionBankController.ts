@@ -7,11 +7,6 @@ import path from "path";
 import { promises as fs } from "fs";
 import mongoose, { Types } from "mongoose";
 
-export const classCategory = {
-  yaya: "yaya",
-  adult: "adult",
-};
-
 export const createQuestion = async (
   req: AuthenticatedTeacher,
   res: Response,
@@ -259,4 +254,11 @@ export const getBanksByExamination = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch question banks" });
   }
+};
+
+export const getQuestionBank = async (req: Request, res: Response) => {
+  const data = await questionBankModel
+    .findOne(req.query)
+    .populate("classCategory");
+  res.send(data);
 };

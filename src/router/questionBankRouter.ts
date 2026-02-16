@@ -5,6 +5,7 @@ import {
   deleteQuestion,
   deleteQuestionBank,
   getBanksByExamination,
+  getQuestionBank,
   updateQuestion,
   uploadQuestionBankFile,
 } from "../controllers/questionBankController";
@@ -17,6 +18,7 @@ const questionBankRouter = Router();
 
 questionBankRouter
   //  .get("/count", viewQuestionBankCount)
+  .get("/viewquestionbank", authenticateToken, getQuestionBank)
   .post("/createquestionbank", authenticateToken, createQuestionBank)
   .post("/create", authenticateToken, createQuestion)
   .get("/view", authenticateToken, getBanksByExamination)

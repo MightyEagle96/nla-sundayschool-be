@@ -45,16 +45,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBanksByExamination = exports.createQuestionBank = exports.updateQuestion = exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.createQuestion = exports.classCategory = void 0;
+exports.getQuestionBank = exports.getBanksByExamination = exports.createQuestionBank = exports.updateQuestion = exports.deleteQuestionBank = exports.deleteQuestion = exports.uploadQuestionBankFile = exports.createQuestion = void 0;
 const convert_excel_to_json_1 = __importDefault(require("convert-excel-to-json"));
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = require("fs");
 const mongoose_1 = __importStar(require("mongoose"));
-exports.classCategory = {
-    yaya: "yaya",
-    adult: "adult",
-};
 const createQuestion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const questionBank = yield questionBankModel_1.default.findOne({
@@ -264,3 +260,10 @@ const getBanksByExamination = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getBanksByExamination = getBanksByExamination;
+const getQuestionBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = yield questionBankModel_1.default
+        .findOne(req.query)
+        .populate("classCategory");
+    res.send(data);
+});
+exports.getQuestionBank = getQuestionBank;
