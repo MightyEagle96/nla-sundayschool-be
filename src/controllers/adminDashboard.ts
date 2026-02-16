@@ -83,3 +83,24 @@ export const viewClassCategories = async (req: Request, res: Response) => {
     res.sendStatus(500);
   }
 };
+
+export const viewClasses = async (req: Request, res: Response) => {
+  try {
+    const classes = await ClassModel.find(req.query)
+      .populate("classCategory", {
+        name: 1,
+      })
+      .lean();
+
+    const mappedResults = classes.map((c, i) => {
+      return {
+        ...c,
+        id: i + 1,
+      };
+    });
+
+    res.send(mappedResults);
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};

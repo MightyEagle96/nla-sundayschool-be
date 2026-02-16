@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = exports.yayaClasses = exports.adultClasses = void 0;
+exports.viewClasses = exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = exports.yayaClasses = exports.adultClasses = void 0;
 const studentModel_1 = require("../models/studentModel");
 const teacherModel_1 = require("../models/teacherModel");
 const classModel_1 = __importDefault(require("../models/classModel"));
@@ -95,3 +95,20 @@ const viewClassCategories = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.viewClassCategories = viewClassCategories;
+const viewClasses = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const classes = yield classModel_1.default.find(req.query)
+            .populate("classCategory", {
+            name: 1,
+        })
+            .lean();
+        const mappedResults = classes.map((c, i) => {
+            return Object.assign(Object.assign({}, c), { id: i + 1 });
+        });
+        res.send(mappedResults);
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+});
+exports.viewClasses = viewClasses;
