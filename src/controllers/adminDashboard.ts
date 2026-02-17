@@ -95,11 +95,29 @@ export const viewClasses = async (req: Request, res: Response) => {
 
 export const viewExamResults = async (req: Request, res: Response) => {
   try {
-    const results = await CandidateResponses.find(req.query)
+    const page = (req.query.page || 1) as number;
+    const limit = (req.query.limit || 50) as number;
+    const results = await CandidateResponses.find({
+      examination: req.query.examination,
+    })
       .populate("student", { firstName: 1, lastName: 1 })
-      .select({ answers: 0 });
+      .populate("questionCategory", { name: 1 })
+      .select({ answers: 0 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
-    res.send(results);
+    const total = await CandidateResponses.countDocuments({
+      examination: req.query.examination,
+    });
+
+    const mappedResults = results.map((c, i) => {
+      return {
+        ...c,
+        id: (page - 1) * limit + i + 1,
+      };
+    });
+    res.send({ results: mappedResults, total, page, limit });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);

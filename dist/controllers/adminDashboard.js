@@ -104,10 +104,24 @@ const viewClasses = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.viewClasses = viewClasses;
 const viewExamResults = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const results = yield candidateResponses_1.default.find(req.query)
+        const page = (req.query.page || 1);
+        const limit = (req.query.limit || 50);
+        const results = yield candidateResponses_1.default.find({
+            examination: req.query.examination,
+        })
             .populate("student", { firstName: 1, lastName: 1 })
-            .select({ answers: 0 });
-        res.send(results);
+            .populate("questionCategory", { name: 1 })
+            .select({ answers: 0 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+        const total = yield candidateResponses_1.default.countDocuments({
+            examination: req.query.examination,
+        });
+        const mappedResults = results.map((c, i) => {
+            return Object.assign(Object.assign({}, c), { id: (page - 1) * limit + i + 1 });
+        });
+        res.send({ results: mappedResults, total, page, limit });
     }
     catch (error) {
         console.log(error);

@@ -11,7 +11,7 @@ export interface IResponses {
   ];
   createdAt: Date;
   updatedAt: Date;
-  questionCategory: string;
+  questionCategory: Types.ObjectId;
   score: number;
 }
 
@@ -19,7 +19,7 @@ const schema = new Schema<IResponses>(
   {
     examination: { type: Schema.Types.ObjectId, ref: "Examination" },
     student: { type: Schema.Types.ObjectId, ref: "Student" },
-    questionCategory: String,
+    questionCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
     answers: [
       {
         questionId: String,
