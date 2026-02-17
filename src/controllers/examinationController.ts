@@ -6,6 +6,7 @@ import { AuthenticatedStudent } from "../models/studentModel";
 import { ConcurrentJobQueue } from "../utils/DataQueue";
 import CandidateResponses, { IResponses } from "../models/candidateResponses";
 import e from "cors";
+import ClassCategoryModel from "../models/classCategoryModel";
 
 export const createExamination = async (
   req: AuthenticatedTeacher,
@@ -177,8 +178,15 @@ export const viewExamination = async (
   if (hasTakenThisExamination) {
     return res.status(400).send("You have already taken this examination");
   }
+  const classCategory = await ClassCategoryModel.findById(
+    req.student.classCategory,
+  );
 
-  res.send(examination);
+  if (!classCategory) {
+    return res.status(400).send("Class category not found");
+  }
+
+  res.send({ examination, classCategory });
 };
 
 export const viewResults = async (req: AuthenticatedStudent, res: Response) => {
@@ -248,32 +256,23 @@ export const fetchQuestions = async (
 
     const questionBank = await questionBankModel.findOne({
       examination: req.query.id,
+      classCategory: req.student?.classCategory,
     });
 
-    if (!questionBank) {
+    if (!questionBank || !questionBank.questions.length) {
       return res.status(400).send("Question bank not found");
     }
 
-    // const filteredQuestions = questionBank.questions.filter(
-    //   (question) =>
-    //     question.classCategory.toLowerCase() ===
-    //     req.student?.classCategory.toLowerCase(),
-    // );
+    const examQuestions = shuffleArray(questionBank.questions).map((q) => ({
+      _id: q._id,
+      question: q.question,
+      options: shuffleArray(q.options),
+    }));
 
-    // if (filteredQuestions.length === 0) {
-    //   return res.status(400).send("No questions for your class category");
-    // }
-
-    // const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
-    //   _id: q._id,
-    //   question: q.question,
-    //   options: shuffleArray(q.options),
-    // }));
-
-    // res.send({
-    //   questions: examQuestions,
-    //   examination,
-    // });
+    res.send({
+      questions: examQuestions,
+      examination,
+    });
   } catch (error) {
     res.sendStatus(500);
   }
@@ -321,46 +320,51 @@ export const saveResponses = async (
 };
 
 export const handleAssessmentScore = async (body: IResponses) => {
-  // try {
-  //   const questionBank = await questionBankModel.findOne({
-  //     examination: body.examination,
-  //   });
-  //   if (!questionBank) return;
-  //   const filteredQuestions = questionBank.questions.filter(
-  //     (question) =>
-  //       question.classCategory.toLowerCase() ===
-  //       body.questionCategory.toLowerCase(),
-  //   );
-  //   const questionMap = new Map(
-  //     filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
-  //   );
-  //   let correct = 0;
-  //   for (const answer of body.answers) {
-  //     if (questionMap.get(answer.questionId) === answer.selectedOption) {
-  //       correct++;
-  //     }
-  //   }
-  //   const score = Math.round((correct / filteredQuestions.length) * 100);
-  //   await CandidateResponses.findOneAndUpdate(
-  //     {
-  //       examination: body.examination,
-  //       student: body.student,
-  //       questionCategory: body.questionCategory,
-  //     },
-  //     {
-  //       $set: {
-  //         ...body,
-  //         score,
-  //       },
-  //     },
-  //     {
-  //       upsert: true,
-  //       new: true,
-  //     },
-  //   );
-  // } catch (error) {
-  //   console.log(error);
-  // }
+  try {
+    const questionBank = await questionBankModel.findOne({
+      examination: body.examination,
+      classCategory: body.questionCategory,
+    });
+
+    if (!questionBank) return;
+
+    const questionMap = new Map(
+      questionBank.questions.map((q: any) => [
+        q._id.toString(),
+        q.correctAnswer,
+      ]),
+    );
+
+    let correct = 0;
+
+    for (const answer of body.answers) {
+      if (questionMap.get(answer.questionId) === answer.selectedOption) {
+        correct++;
+      }
+    }
+
+    const score = Math.round((correct / questionBank.questions.length) * 100);
+
+    await CandidateResponses.findOneAndUpdate(
+      {
+        examination: body.examination,
+        student: body.student,
+        questionCategory: body.questionCategory,
+      },
+      {
+        $set: {
+          ...body,
+          score,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const generateExamTranscript = async ({
@@ -372,11 +376,6 @@ export const generateExamTranscript = async ({
   student: string;
   questionCategory: string;
 }) => {
-  console.log({
-    examination,
-    student,
-    questionCategory,
-  });
   const responseDoc = await CandidateResponses.findOne({
     examination,
     student,
@@ -390,6 +389,7 @@ export const generateExamTranscript = async ({
   const questionBank = await questionBankModel
     .findOne({
       examination,
+      classCategory: questionCategory,
     })
     .lean();
 
@@ -397,10 +397,7 @@ export const generateExamTranscript = async ({
     throw new Error("Question bank not found");
   }
 
-  const questions = questionBank.questions.filter(
-    (q: any) =>
-      q.classCategory.toLowerCase() === questionCategory.toLowerCase(),
-  );
+  const questions = questionBank.questions;
 
   const questionMap = new Map(questions.map((q: any) => [q._id.toString(), q]));
 
@@ -437,13 +434,14 @@ export const getExamTranscript = async (
     if (!req.student) {
       return res.sendStatus(401);
     }
-    // const data = await generateExamTranscript({
-    //   examination: req.query.examination as string,
-    //   student: req.student?._id.toString() as string,
-    //   // questionCategory: req.student?.classCategory as string,
-    // });
 
-    // res.json(data);
+    const data = await generateExamTranscript({
+      examination: req.query.examination as string,
+      student: req.student?._id.toString() as string,
+      questionCategory: req.student?.classCategory.toString(),
+    });
+
+    res.json(data);
   } catch (err: any) {
     console.log(err);
     res.status(400).json({ message: err.message });

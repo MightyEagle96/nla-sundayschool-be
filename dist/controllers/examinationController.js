@@ -17,6 +17,7 @@ const examinationModel_1 = __importDefault(require("../models/examinationModel")
 const questionBankModel_1 = __importDefault(require("../models/questionBankModel"));
 const DataQueue_1 = require("../utils/DataQueue");
 const candidateResponses_1 = __importDefault(require("../models/candidateResponses"));
+const classCategoryModel_1 = __importDefault(require("../models/classCategoryModel"));
 const createExamination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -150,7 +151,11 @@ const viewExamination = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (hasTakenThisExamination) {
         return res.status(400).send("You have already taken this examination");
     }
-    res.send(examination);
+    const classCategory = yield classCategoryModel_1.default.findById(req.student.classCategory);
+    if (!classCategory) {
+        return res.status(400).send("Class category not found");
+    }
+    res.send({ examination, classCategory });
 });
 exports.viewExamination = viewExamination;
 const viewResults = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -202,6 +207,7 @@ const updateDuration = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.updateDuration = updateDuration;
 const fetchQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const examination = yield examinationModel_1.default.findOne({ _id: req.query.id });
         if (!examination) {
@@ -209,27 +215,20 @@ const fetchQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const questionBank = yield questionBankModel_1.default.findOne({
             examination: req.query.id,
+            classCategory: (_a = req.student) === null || _a === void 0 ? void 0 : _a.classCategory,
         });
-        if (!questionBank) {
+        if (!questionBank || !questionBank.questions.length) {
             return res.status(400).send("Question bank not found");
         }
-        // const filteredQuestions = questionBank.questions.filter(
-        //   (question) =>
-        //     question.classCategory.toLowerCase() ===
-        //     req.student?.classCategory.toLowerCase(),
-        // );
-        // if (filteredQuestions.length === 0) {
-        //   return res.status(400).send("No questions for your class category");
-        // }
-        // const examQuestions = shuffleArray(filteredQuestions).map((q) => ({
-        //   _id: q._id,
-        //   question: q.question,
-        //   options: shuffleArray(q.options),
-        // }));
-        // res.send({
-        //   questions: examQuestions,
-        //   examination,
-        // });
+        const examQuestions = (0, exports.shuffleArray)(questionBank.questions).map((q) => ({
+            _id: q._id,
+            question: q.question,
+            options: (0, exports.shuffleArray)(q.options),
+        }));
+        res.send({
+            questions: examQuestions,
+            examination,
+        });
     }
     catch (error) {
         res.sendStatus(500);
@@ -269,54 +268,41 @@ const saveResponses = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.saveResponses = saveResponses;
 const handleAssessmentScore = (body) => __awaiter(void 0, void 0, void 0, function* () {
-    // try {
-    //   const questionBank = await questionBankModel.findOne({
-    //     examination: body.examination,
-    //   });
-    //   if (!questionBank) return;
-    //   const filteredQuestions = questionBank.questions.filter(
-    //     (question) =>
-    //       question.classCategory.toLowerCase() ===
-    //       body.questionCategory.toLowerCase(),
-    //   );
-    //   const questionMap = new Map(
-    //     filteredQuestions.map((q: any) => [q._id.toString(), q.correctAnswer]),
-    //   );
-    //   let correct = 0;
-    //   for (const answer of body.answers) {
-    //     if (questionMap.get(answer.questionId) === answer.selectedOption) {
-    //       correct++;
-    //     }
-    //   }
-    //   const score = Math.round((correct / filteredQuestions.length) * 100);
-    //   await CandidateResponses.findOneAndUpdate(
-    //     {
-    //       examination: body.examination,
-    //       student: body.student,
-    //       questionCategory: body.questionCategory,
-    //     },
-    //     {
-    //       $set: {
-    //         ...body,
-    //         score,
-    //       },
-    //     },
-    //     {
-    //       upsert: true,
-    //       new: true,
-    //     },
-    //   );
-    // } catch (error) {
-    //   console.log(error);
-    // }
+    try {
+        const questionBank = yield questionBankModel_1.default.findOne({
+            examination: body.examination,
+            classCategory: body.questionCategory,
+        });
+        if (!questionBank)
+            return;
+        const questionMap = new Map(questionBank.questions.map((q) => [
+            q._id.toString(),
+            q.correctAnswer,
+        ]));
+        let correct = 0;
+        for (const answer of body.answers) {
+            if (questionMap.get(answer.questionId) === answer.selectedOption) {
+                correct++;
+            }
+        }
+        const score = Math.round((correct / questionBank.questions.length) * 100);
+        yield candidateResponses_1.default.findOneAndUpdate({
+            examination: body.examination,
+            student: body.student,
+            questionCategory: body.questionCategory,
+        }, {
+            $set: Object.assign(Object.assign({}, body), { score }),
+        }, {
+            upsert: true,
+            new: true,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
 });
 exports.handleAssessmentScore = handleAssessmentScore;
 const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function* ({ examination, student, questionCategory, }) {
-    console.log({
-        examination,
-        student,
-        questionCategory,
-    });
     const responseDoc = yield candidateResponses_1.default.findOne({
         examination,
         student,
@@ -328,12 +314,13 @@ const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function*
     const questionBank = yield questionBankModel_1.default
         .findOne({
         examination,
+        classCategory: questionCategory,
     })
         .lean();
     if (!questionBank) {
         throw new Error("Question bank not found");
     }
-    const questions = questionBank.questions.filter((q) => q.classCategory.toLowerCase() === questionCategory.toLowerCase());
+    const questions = questionBank.questions;
     const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
     const transcript = responseDoc.answers.map((ans) => {
         const q = questionMap.get(ans.questionId);
@@ -359,16 +346,17 @@ const generateExamTranscript = (_a) => __awaiter(void 0, [_a], void 0, function*
 });
 exports.generateExamTranscript = generateExamTranscript;
 const getExamTranscript = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         if (!req.student) {
             return res.sendStatus(401);
         }
-        // const data = await generateExamTranscript({
-        //   examination: req.query.examination as string,
-        //   student: req.student?._id.toString() as string,
-        //   // questionCategory: req.student?.classCategory as string,
-        // });
-        // res.json(data);
+        const data = yield (0, exports.generateExamTranscript)({
+            examination: req.query.examination,
+            student: (_a = req.student) === null || _a === void 0 ? void 0 : _a._id.toString(),
+            questionCategory: (_b = req.student) === null || _b === void 0 ? void 0 : _b.classCategory.toString(),
+        });
+        res.json(data);
     }
     catch (err) {
         console.log(err);
