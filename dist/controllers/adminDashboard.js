@@ -12,20 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewClasses = exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = exports.yayaClasses = exports.adultClasses = void 0;
+exports.viewExamResults = exports.viewClasses = exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = void 0;
 const studentModel_1 = require("../models/studentModel");
 const teacherModel_1 = require("../models/teacherModel");
 const classModel_1 = __importDefault(require("../models/classModel"));
 const classCategoryModel_1 = __importDefault(require("../models/classCategoryModel"));
-exports.adultClasses = [
-    "grace",
-    "mercy",
-    "favor",
-    "peace",
-    "love",
-    "goodness",
-].sort();
-exports.yayaClasses = ["glory", "truth", "wisdom"].sort();
+const candidateResponses_1 = __importDefault(require("../models/candidateResponses"));
 const adminDashboard = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const [students, teachers] = yield Promise.all([
@@ -35,8 +27,6 @@ const adminDashboard = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.send({
             students,
             teachers,
-            adultClasses: exports.adultClasses.length,
-            yayaClasses: exports.yayaClasses.length,
         });
     }
     catch (error) { }
@@ -112,3 +102,16 @@ const viewClasses = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.viewClasses = viewClasses;
+const viewExamResults = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const results = yield candidateResponses_1.default.find(req.query)
+            .populate("student", { firstName: 1, lastName: 1 })
+            .select({ answers: 0 });
+        res.send(results);
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+exports.viewExamResults = viewExamResults;

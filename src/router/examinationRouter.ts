@@ -14,6 +14,7 @@ import {
   viewResults,
 } from "../controllers/examinationController";
 import { restrictToAdmin } from "../controllers/accountController";
+import { viewExamResults } from "../controllers/adminDashboard";
 
 const examinationRouter = Router();
 
@@ -40,6 +41,8 @@ examinationRouter
 
   .get("/fetchquestions", authenticateToken, fetchQuestions)
   .post("/saveresponses", authenticateToken, saveResponses)
-  .get("/examtranscript", authenticateToken, getExamTranscript);
+  .get("/examtranscript", authenticateToken, getExamTranscript)
+
+  .get("/examinationresults", authenticateToken, viewExamResults);
 
 export { examinationRouter };

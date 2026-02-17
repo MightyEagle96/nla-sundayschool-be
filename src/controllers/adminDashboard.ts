@@ -3,17 +3,7 @@ import { StudentModel } from "../models/studentModel";
 import { TeacherModel } from "../models/teacherModel";
 import ClassModel, { IClass } from "../models/classModel";
 import ClassCategoryModel from "../models/classCategoryModel";
-
-export const adultClasses = [
-  "grace",
-  "mercy",
-  "favor",
-  "peace",
-  "love",
-  "goodness",
-].sort();
-
-export const yayaClasses = ["glory", "truth", "wisdom"].sort();
+import CandidateResponses from "../models/candidateResponses";
 
 export const adminDashboard = async (req: Request, res: Response) => {
   try {
@@ -25,8 +15,6 @@ export const adminDashboard = async (req: Request, res: Response) => {
     res.send({
       students,
       teachers,
-      adultClasses: adultClasses.length,
-      yayaClasses: yayaClasses.length,
     });
   } catch (error) {}
 };
@@ -101,6 +89,19 @@ export const viewClasses = async (req: Request, res: Response) => {
 
     res.send(mappedResults);
   } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const viewExamResults = async (req: Request, res: Response) => {
+  try {
+    const results = await CandidateResponses.find(req.query)
+      .populate("student", { firstName: 1, lastName: 1 })
+      .select({ answers: 0 });
+
+    res.send(results);
+  } catch (error) {
+    console.log(error);
     res.sendStatus(500);
   }
 };
