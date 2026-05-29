@@ -72,27 +72,27 @@ export const viewClassCategories = async (req: Request, res: Response) => {
   }
 };
 
-// export const viewClasses = async (req: Request, res: Response) => {
-//   try {
-//     const classes = await ClassModel.find(req.query)
-//       .populate("classCategory", {
-//         name: 1,
-//       })
-//       .lean()
-//       .sort({ name: 1 });
+export const viewClassesForm = async (req: Request, res: Response) => {
+  try {
+    const classes = await ClassModel.find(req.query)
+      .populate("classCategory", {
+        name: 1,
+      })
+      .lean()
+      .sort({ name: 1 });
 
-//     const mappedResults = classes.map((c, i) => {
-//       return {
-//         ...c,
-//         id: i + 1,
-//       };
-//     });
+    const mappedResults = classes.map((c, i) => {
+      return {
+        ...c,
+        id: i + 1,
+      };
+    });
 
-//     res.send(mappedResults);
-//   } catch (error) {
-//     res.sendStatus(500);
-//   }
-// };
+    res.send(mappedResults);
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
 
 export const viewClasses = async (req: Request, res: Response) => {
   try {

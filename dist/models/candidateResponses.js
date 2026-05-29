@@ -13,5 +13,6 @@ const schema = new mongoose_1.Schema({
     ],
     score: { type: Number, default: 0 },
 }, { timestamps: true });
+schema.index({ examination: 1, student: 1 }, { unique: true });
 const CandidateResponses = (0, mongoose_1.model)("CandidateResponses", schema);
 exports.default = CandidateResponses;

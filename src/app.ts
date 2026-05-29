@@ -10,6 +10,18 @@ import path = require("path");
 import mongoose from "mongoose";
 import CandidateResponses from "./models/candidateResponses";
 
+export const syncIndexes = async () => {
+  try {
+    console.log("🔄 Syncing indexes...");
+    for (const name in mongoose.models) {
+      console.log(`→ ${name}`);
+      await mongoose.models[name].syncIndexes();
+    }
+    console.log("✅ Index sync complete");
+  } catch (err) {
+    console.error("❌ Index sync failed:", err);
+  }
+};
 // import crypto from "crypto";
 
 // const secret1 = crypto.randomBytes(256).toString("base64");

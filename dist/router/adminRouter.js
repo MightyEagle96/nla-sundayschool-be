@@ -8,5 +8,6 @@ adminRouter
     .post("/createclass", adminDashboard_1.createClass)
     .get("/classcategories", adminDashboard_1.viewClassCategories)
     .post("/addclasscategory", adminDashboard_1.addClassCategory)
-    .get("/classes", adminDashboard_1.viewClasses);
+    .get("/classes", adminDashboard_1.viewClasses)
+    .get("/classform", adminDashboard_1.viewClassesForm);
 exports.default = adminRouter;

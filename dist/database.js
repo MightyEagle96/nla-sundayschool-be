@@ -36,6 +36,7 @@ const ConnectDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         isConnected = true;
         console.log("✅ DB connected successfully");
+        // await syncIndexes();
     }
     catch (err) {
         console.error("❌ DB connection error:", err.message);

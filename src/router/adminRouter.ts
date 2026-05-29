@@ -5,6 +5,7 @@ import {
   createClass,
   viewClassCategories,
   viewClasses,
+  viewClassesForm,
 } from "../controllers/adminDashboard";
 
 const adminRouter = Router();
@@ -14,6 +15,7 @@ adminRouter
   .post("/createclass", createClass)
   .get("/classcategories", viewClassCategories)
   .post("/addclasscategory", addClassCategory)
-  .get("/classes", viewClasses);
+  .get("/classes", viewClasses)
+  .get("/classform", viewClassesForm);
 
 export default adminRouter;

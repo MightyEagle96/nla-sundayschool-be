@@ -1,8 +1,18 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.syncIndexes = void 0;
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -11,6 +21,21 @@ const router_1 = __importDefault(require("./router/router"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const path = require("path");
+const mongoose_1 = __importDefault(require("mongoose"));
+const syncIndexes = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log("🔄 Syncing indexes...");
+        for (const name in mongoose_1.default.models) {
+            console.log(`→ ${name}`);
+            yield mongoose_1.default.models[name].syncIndexes();
+        }
+        console.log("✅ Index sync complete");
+    }
+    catch (err) {
+        console.error("❌ Index sync failed:", err);
+    }
+});
+exports.syncIndexes = syncIndexes;
 // import crypto from "crypto";
 // const secret1 = crypto.randomBytes(256).toString("base64");
 // const secret2 = crypto.randomBytes(256).toString("base64");

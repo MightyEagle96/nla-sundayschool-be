@@ -32,6 +32,8 @@ const schema = new Schema<IResponses>(
   { timestamps: true },
 );
 
+schema.index({ examination: 1, student: 1 }, { unique: true });
+
 const CandidateResponses = model("CandidateResponses", schema);
 
 export default CandidateResponses;

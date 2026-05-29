@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { syncIndexes } from "./app";
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ export const ConnectDatabase = async () => {
     });
     isConnected = true;
     console.log("✅ DB connected successfully");
+
+    // await syncIndexes();
   } catch (err) {
     console.error("❌ DB connection error:", (err as Error).message);
     process.exit(1);
