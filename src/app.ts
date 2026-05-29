@@ -63,6 +63,7 @@ const whitelist = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://nla-sundayschool-be.onrender.com",
+  "https://www.rccgnlass.com",
 ];
 
 const corsOptions: cors.CorsOptions = {
