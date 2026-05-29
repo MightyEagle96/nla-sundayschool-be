@@ -65,20 +65,104 @@ export const addClassCategory = async (req: Request, res: Response) => {
 
 export const viewClassCategories = async (req: Request, res: Response) => {
   try {
-    const classCategories = await ClassCategoryModel.find();
+    const classCategories = await ClassCategoryModel.find().sort({ name: 1 });
     res.send(classCategories);
   } catch (error) {
     res.sendStatus(500);
   }
 };
 
+// export const viewClasses = async (req: Request, res: Response) => {
+//   try {
+//     const classes = await ClassModel.find(req.query)
+//       .populate("classCategory", {
+//         name: 1,
+//       })
+//       .lean()
+//       .sort({ name: 1 });
+
+//     const mappedResults = classes.map((c, i) => {
+//       return {
+//         ...c,
+//         id: i + 1,
+//       };
+//     });
+
+//     res.send(mappedResults);
+//   } catch (error) {
+//     res.sendStatus(500);
+//   }
+// };
+
 export const viewClasses = async (req: Request, res: Response) => {
   try {
-    const classes = await ClassModel.find(req.query)
-      .populate("classCategory", {
-        name: 1,
-      })
-      .lean();
+    const classes = await ClassModel.aggregate([
+      {
+        $match: req.query,
+      },
+
+      {
+        $lookup: {
+          from: "classcategories",
+          localField: "classCategory",
+          foreignField: "_id",
+          as: "classCategory",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$classCategory",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "students",
+          let: { classId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$classData", "$$classId"],
+                },
+              },
+            },
+
+            {
+              $count: "count",
+            },
+          ],
+          as: "studentCount",
+        },
+      },
+
+      {
+        $addFields: {
+          totalStudents: {
+            $ifNull: [
+              {
+                $arrayElemAt: ["$studentCount.count", 0],
+              },
+              0,
+            ],
+          },
+        },
+      },
+
+      {
+        $project: {
+          studentCount: 0,
+        },
+      },
+
+      {
+        $sort: {
+          name: 1,
+        },
+      },
+    ]);
 
     const mappedResults = classes.map((c, i) => {
       return {
@@ -89,10 +173,10 @@ export const viewClasses = async (req: Request, res: Response) => {
 
     res.send(mappedResults);
   } catch (error) {
+    console.log(error);
     res.sendStatus(500);
   }
 };
-
 export const viewExamResults = async (req: Request, res: Response) => {
   try {
     const page = (req.query.page || 1) as number;

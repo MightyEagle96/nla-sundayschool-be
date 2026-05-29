@@ -18,12 +18,6 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentSchema = new mongoose_1.Schema({
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    email: {
-        type: String,
-        required: true,
-        lowercase: true,
-        trim: true,
-    },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },
     classCategory: { type: mongoose_1.Schema.Types.ObjectId, ref: "ClassCategory" },
@@ -31,10 +25,8 @@ const studentSchema = new mongoose_1.Schema({
     role: { type: String, default: "student" },
     // title: { type: String, required: true },
     gender: { type: String, required: true },
-    password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
     disabled: { type: Boolean, default: false },
 }, { timestamps: true });
-studentSchema.index({ email: 1 }, { unique: true });
 studentSchema.index({ phoneNumber: 1 }, { unique: true });
 studentSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {

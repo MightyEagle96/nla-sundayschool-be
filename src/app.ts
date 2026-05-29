@@ -7,6 +7,8 @@ import appRouter from "./router/router";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path = require("path");
+import mongoose from "mongoose";
+import CandidateResponses from "./models/candidateResponses";
 
 // import crypto from "crypto";
 
@@ -16,8 +18,31 @@ import path = require("path");
 // console.log({ secret1, secret2 });
 
 dotenv.config();
+// const cleanupFunction = async () => {
+//   try {
+//     const docs = await CandidateResponses.find({
+//       questionCategory: { $type: "string" },
+//     }).lean(false); // ensure mongoose docs
+
+//     for (const doc of docs) {
+//       await CandidateResponses.updateOne(
+//         { _id: doc._id },
+//         {
+//           $set: {
+//             questionCategory: new mongoose.Types.ObjectId(doc.questionCategory),
+//           },
+//         },
+//       );
+//     }
+
+//     console.log("Migration done");
+//   } catch (error: any) {
+//     console.error(error.message);
+//   }
+// };
 
 ConnectDatabase();
+//cleanupFunction();
 const app = express();
 
 const whitelist = [

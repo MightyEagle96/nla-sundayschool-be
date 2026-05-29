@@ -26,13 +26,7 @@ const studentSchema = new Schema<IStudent>(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
 
-      lowercase: true,
-      trim: true,
-    },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },
     classCategory: { type: Schema.Types.ObjectId, ref: "ClassCategory" },
@@ -40,13 +34,12 @@ const studentSchema = new Schema<IStudent>(
     role: { type: String, default: "student" },
     // title: { type: String, required: true },
     gender: { type: String, required: true },
-    password: { type: String, required: true, minlength: 6 }, // ✅ enforce length
+
     disabled: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
 
-studentSchema.index({ email: 1 }, { unique: true });
 studentSchema.index({ phoneNumber: 1 }, { unique: true });
 
 studentSchema.pre("save", async function (next) {

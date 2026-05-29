@@ -16,7 +16,28 @@ const path = require("path");
 // const secret2 = crypto.randomBytes(256).toString("base64");
 // console.log({ secret1, secret2 });
 dotenv_1.default.config();
+// const cleanupFunction = async () => {
+//   try {
+//     const docs = await CandidateResponses.find({
+//       questionCategory: { $type: "string" },
+//     }).lean(false); // ensure mongoose docs
+//     for (const doc of docs) {
+//       await CandidateResponses.updateOne(
+//         { _id: doc._id },
+//         {
+//           $set: {
+//             questionCategory: new mongoose.Types.ObjectId(doc.questionCategory),
+//           },
+//         },
+//       );
+//     }
+//     console.log("Migration done");
+//   } catch (error: any) {
+//     console.error(error.message);
+//   }
+// };
 (0, database_1.ConnectDatabase)();
+//cleanupFunction();
 const app = (0, express_1.default)();
 const whitelist = [
     "http://192.168.137.1:5173",

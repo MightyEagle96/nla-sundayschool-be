@@ -77,7 +77,7 @@ const addClassCategory = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.addClassCategory = addClassCategory;
 const viewClassCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const classCategories = yield classCategoryModel_1.default.find();
+        const classCategories = yield classCategoryModel_1.default.find().sort({ name: 1 });
         res.send(classCategories);
     }
     catch (error) {
@@ -85,19 +85,94 @@ const viewClassCategories = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.viewClassCategories = viewClassCategories;
+// export const viewClasses = async (req: Request, res: Response) => {
+//   try {
+//     const classes = await ClassModel.find(req.query)
+//       .populate("classCategory", {
+//         name: 1,
+//       })
+//       .lean()
+//       .sort({ name: 1 });
+//     const mappedResults = classes.map((c, i) => {
+//       return {
+//         ...c,
+//         id: i + 1,
+//       };
+//     });
+//     res.send(mappedResults);
+//   } catch (error) {
+//     res.sendStatus(500);
+//   }
+// };
 const viewClasses = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const classes = yield classModel_1.default.find(req.query)
-            .populate("classCategory", {
-            name: 1,
-        })
-            .lean();
+        const classes = yield classModel_1.default.aggregate([
+            {
+                $match: req.query,
+            },
+            {
+                $lookup: {
+                    from: "classcategories",
+                    localField: "classCategory",
+                    foreignField: "_id",
+                    as: "classCategory",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$classCategory",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "students",
+                    let: { classId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$classData", "$$classId"],
+                                },
+                            },
+                        },
+                        {
+                            $count: "count",
+                        },
+                    ],
+                    as: "studentCount",
+                },
+            },
+            {
+                $addFields: {
+                    totalStudents: {
+                        $ifNull: [
+                            {
+                                $arrayElemAt: ["$studentCount.count", 0],
+                            },
+                            0,
+                        ],
+                    },
+                },
+            },
+            {
+                $project: {
+                    studentCount: 0,
+                },
+            },
+            {
+                $sort: {
+                    name: 1,
+                },
+            },
+        ]);
         const mappedResults = classes.map((c, i) => {
             return Object.assign(Object.assign({}, c), { id: i + 1 });
         });
         res.send(mappedResults);
     }
     catch (error) {
+        console.log(error);
         res.sendStatus(500);
     }
 });

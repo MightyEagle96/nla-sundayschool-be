@@ -29,11 +29,11 @@ const accountQueue = new ConcurrentJobQueue({
 
 export const createAccount = async (req: Request, res: Response) => {
   const existingAccount = await StudentModel.findOne({
-    ["$or"]: [{ email: req.body.email }, { phoneNumber: req.body.phoneNumber }],
+    phoneNumber: req.body.phoneNumber,
   });
 
   if (existingAccount) {
-    return res.status(400).send("Email or phone number already exists");
+    return res.status(400).send("phone number already exists");
   }
 
   accountQueue.enqueue(async () => {
@@ -51,45 +51,39 @@ export const loginAccount = async (req: Request, res: Response) => {
   const body: IStudent = req.body;
 
   const existing = await StudentModel.findOne({
-    $or: [{ email: body.email }, { phoneNumber: body.phoneNumber }],
+    phoneNumber: body.phoneNumber,
   });
 
   if (!existing) {
     return res.status(400).send("Account not found");
   }
 
-  bcrypt.compare(body.password, existing.password).then((result) => {
-    if (result) {
-      const accessToken = generateToken({
-        _id: existing._id,
-        email: existing.email,
-        role: "student",
-      });
-
-      const refreshToken = generateRefreshToken({
-        _id: existing._id,
-        email: existing.email,
-        role: "student",
-      });
-      // res.send("Account logged in successfully");
-      res
-        .cookie(tokens.auth_token, accessToken, {
-          httpOnly: false,
-          secure: true,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          maxAge: 1000 * 60 * 60, // 1h
-        })
-        .cookie(tokens.refresh_token, refreshToken, {
-          httpOnly: false,
-          secure: true,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
-        })
-        .send("Logged In");
-    } else {
-      res.status(400).send("Invalid credentials");
-    }
+  const accessToken = generateToken({
+    _id: existing._id,
+    email: existing.email,
+    role: "student",
   });
+
+  const refreshToken = generateRefreshToken({
+    _id: existing._id,
+    email: existing.email,
+    role: "student",
+  });
+  // res.send("Account logged in successfully");
+  res
+    .cookie(tokens.auth_token, accessToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1000 * 60 * 60, // 1h
+    })
+    .cookie(tokens.refresh_token, refreshToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7d
+    })
+    .send("Logged In");
 };
 
 export const myProfile = async (req: JointInterface, res: Response) => {
@@ -264,38 +258,41 @@ export const restrictToAdmin = (
 //view candidates
 export const viewCandidates = async (req: Request, res: Response) => {
   try {
-    try {
-      const page = (req.query.page || 1) as number;
-      const limit = (req.query.limit || 50) as number;
-      const candidates = await StudentModel.find()
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 50;
 
-      const total = await StudentModel.countDocuments();
+    const candidates = await StudentModel.find()
+      .populate([
+        { path: "classCategory", select: "name" },
+        { path: "classData", select: "name" },
+      ])
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
-      const totalCandidates = candidates.map((c, i) => {
-        return {
-          ...c,
-          id: (page - 1) * limit + i + 1,
-        };
-      });
-      res.send({
-        candidates: totalCandidates,
-        total,
-        page,
-        limit,
-      });
-    } catch (error) {
-      res.send({
-        candidates: [],
-        total: 0,
-        page: 0,
-        limit: 0,
-      });
-    }
+    const total = await StudentModel.countDocuments();
+
+    const totalCandidates = candidates.map((c, i) => ({
+      ...c,
+      id: (page - 1) * limit + i + 1,
+    }));
+
+    res.send({
+      candidates: totalCandidates,
+      total,
+      page,
+      limit,
+    });
   } catch (error) {
-    res.sendStatus(500);
+    console.log(error);
+
+    res.status(500).send({
+      candidates: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+    });
   }
 };
 
