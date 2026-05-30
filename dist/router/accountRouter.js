@@ -13,7 +13,7 @@ accountRouter
     .get("/myprofile", jwtController_1.authenticateToken, accountController_1.myProfile)
     .get("/logout", jwtController_1.authenticateToken, accountController_1.logout)
     // teacher account
-    .post("/teacher/register", teacherAccountController_1.teacherCreateAccount)
+    .post("/teacher/register", teacherAccountController_1.createTeacherAccount)
     .post("/teacher/login", teacherAccountController_1.teacherLoginAccount)
     .get("/refresh", accountController_1.getRefreshToken)
     .get("/candidates", jwtController_1.authenticateToken, accountController_1.viewCandidates)

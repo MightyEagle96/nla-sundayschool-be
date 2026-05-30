@@ -33,7 +33,7 @@ const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         phoneNumber: req.body.phoneNumber,
     });
     if (existingAccount) {
-        return res.status(400).send("phone number already exists");
+        return res.status(400).send("Phone number already exists");
     }
     accountQueue.enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -156,12 +156,10 @@ const getRefreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (teacher) {
             const accessToken = (0, jwtController_1.generateToken)({
                 _id: teacher._id,
-                email: teacher.email,
                 role: "teacher",
             });
             const refreshToken = (0, jwtController_1.generateRefreshToken)({
                 _id: teacher._id,
-                email: teacher.email,
                 role: "teacher",
             });
             return res

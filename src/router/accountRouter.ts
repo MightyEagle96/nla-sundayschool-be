@@ -11,7 +11,7 @@ import {
 } from "../controllers/accountController";
 import { authenticateToken } from "../controllers/jwtController";
 import {
-  teacherCreateAccount,
+  createTeacherAccount,
   teacherLoginAccount,
 } from "../controllers/teacherAccountController";
 
@@ -24,7 +24,7 @@ accountRouter
   .get("/logout", authenticateToken, logout)
 
   // teacher account
-  .post("/teacher/register", teacherCreateAccount)
+  .post("/teacher/register", createTeacherAccount)
   .post("/teacher/login", teacherLoginAccount)
 
   .get("/refresh", getRefreshToken)

@@ -33,7 +33,7 @@ export const createAccount = async (req: Request, res: Response) => {
   });
 
   if (existingAccount) {
-    return res.status(400).send("phone number already exists");
+    return res.status(400).send("Phone number already exists");
   }
 
   accountQueue.enqueue(async () => {
@@ -181,13 +181,13 @@ export const getRefreshToken = async (req: Request, res: Response) => {
     if (teacher) {
       const accessToken = generateToken({
         _id: teacher._id,
-        email: teacher.email,
+
         role: "teacher",
       });
 
       const refreshToken = generateRefreshToken({
         _id: teacher._id,
-        email: teacher.email,
+
         role: "teacher",
       });
 

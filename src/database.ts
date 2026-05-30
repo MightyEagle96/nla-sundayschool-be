@@ -28,7 +28,7 @@ export const ConnectDatabase = async () => {
     isConnected = true;
     console.log("✅ DB connected successfully");
 
-    // await syncIndexes();
+    //await syncIndexes();
   } catch (err) {
     console.error("❌ DB connection error:", (err as Error).message);
     process.exit(1);
