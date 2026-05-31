@@ -296,6 +296,45 @@ export const viewCandidates = async (req: Request, res: Response) => {
   }
 };
 
+export const viewTeachers = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 50;
+
+    const teachers = await TeacherModel.find()
+      .populate([
+        { path: "classCategory", select: "name" },
+        { path: "classData", select: "name" },
+      ])
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await TeacherModel.countDocuments();
+
+    const totalTeachers = teachers.map((c, i) => ({
+      ...c,
+      id: (page - 1) * limit + i + 1,
+    }));
+
+    res.send({
+      teachers: totalTeachers,
+      total,
+      page,
+      limit,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({
+      candidates: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+    });
+  }
+};
 //admin section
 export const createAdminAccount = async (req: Request, res: Response) => {
   try {

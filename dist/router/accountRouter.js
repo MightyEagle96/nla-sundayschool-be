@@ -17,6 +17,7 @@ accountRouter
     .post("/teacher/login", teacherAccountController_1.teacherLoginAccount)
     .get("/refresh", accountController_1.getRefreshToken)
     .get("/candidates", jwtController_1.authenticateToken, accountController_1.viewCandidates)
+    .get("/teachers", jwtController_1.authenticateToken, accountController_1.viewTeachers)
     //admin
     .post("/admin/signup", accountController_1.createAdminAccount)
     .post("/admin/login", accountController_1.loginAdminAccount)

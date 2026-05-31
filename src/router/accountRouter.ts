@@ -8,6 +8,7 @@ import {
   logout,
   myProfile,
   viewCandidates,
+  viewTeachers,
 } from "../controllers/accountController";
 import { authenticateToken } from "../controllers/jwtController";
 import {
@@ -30,6 +31,8 @@ accountRouter
   .get("/refresh", getRefreshToken)
 
   .get("/candidates", authenticateToken, viewCandidates)
+
+  .get("/teachers", authenticateToken, viewTeachers)
 
   //admin
   .post("/admin/signup", createAdminAccount)
