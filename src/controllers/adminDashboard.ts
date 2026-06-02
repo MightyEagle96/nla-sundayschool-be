@@ -210,16 +210,20 @@ export const viewExamResults = async (req: Request, res: Response) => {
 
 export const viewClass = async (req: Request, res: Response) => {
   try {
-    const [classData, students] = await Promise.all([
+    const [classData, teachers, students] = await Promise.all([
       ClassModel.findById(req.query.class),
+      TeacherModel.find({ classData: req.query.class }),
       StudentModel.find({ classData: req.query.class })
-        .sort({ firstName: 1, lastName: 1 })
+        .sort({ lastName: 1, firstName: 1 })
         .lean(),
     ]);
 
     res.send({
       classData,
+      teachers,
       students,
     });
-  } catch (error) {}
+  } catch (error) {
+    res.sendStatus(500);
+  }
 };

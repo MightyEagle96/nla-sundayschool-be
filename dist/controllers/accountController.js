@@ -229,7 +229,7 @@ const viewCandidates = (req, res) => __awaiter(void 0, void 0, void 0, function*
             { path: "classCategory", select: "name" },
             { path: "classData", select: "name" },
         ])
-            .sort({ lastName: 1 })
+            .sort({ lastName: 1, firstName: 1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .lean();

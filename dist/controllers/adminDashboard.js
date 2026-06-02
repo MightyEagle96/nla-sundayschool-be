@@ -205,17 +205,21 @@ const viewExamResults = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.viewExamResults = viewExamResults;
 const viewClass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const [classData, students] = yield Promise.all([
+        const [classData, teachers, students] = yield Promise.all([
             classModel_1.default.findById(req.query.class),
+            teacherModel_1.TeacherModel.find({ classData: req.query.class }),
             studentModel_1.StudentModel.find({ classData: req.query.class })
-                .sort({ firstName: 1, lastName: 1 })
+                .sort({ lastName: 1, firstName: 1 })
                 .lean(),
         ]);
         res.send({
             classData,
+            teachers,
             students,
         });
     }
-    catch (error) { }
+    catch (error) {
+        res.sendStatus(500);
+    }
 });
 exports.viewClass = viewClass;
