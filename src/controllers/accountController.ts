@@ -266,7 +266,7 @@ export const viewCandidates = async (req: Request, res: Response) => {
         { path: "classCategory", select: "name" },
         { path: "classData", select: "name" },
       ])
-      .sort({ createdAt: -1 })
+      .sort({ lastName: 1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();
