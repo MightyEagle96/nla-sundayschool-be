@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { syncIndexes } from "./app";
+import { StudentModel } from "./models/studentModel";
+import { TeacherModel } from "./models/teacherModel";
 
 dotenv.config();
 
@@ -28,7 +30,8 @@ export const ConnectDatabase = async () => {
     isConnected = true;
     console.log("✅ DB connected successfully");
 
-    //await syncIndexes();
+    //await syncIndexes();s
+    //await normalizeNames();
   } catch (err) {
     console.error("❌ DB connection error:", (err as Error).message);
     process.exit(1);
@@ -39,4 +42,24 @@ export const ConnectDatabase = async () => {
     isConnected = false;
     setTimeout(ConnectDatabase, 5000);
   });
+};
+
+const normalizeNames = async () => {
+  try {
+    const docs = await TeacherModel.find({}).lean(false); // ensure mongoose docs
+    for (const doc of docs) {
+      await TeacherModel.updateOne(
+        { _id: doc._id },
+        {
+          $set: {
+            firstName: doc.firstName.toLowerCase(),
+            lastName: doc.lastName.toLowerCase(),
+          },
+        },
+      );
+    }
+    console.log("Migration done");
+  } catch (error: any) {
+    console.error(error.message);
+  }
 };

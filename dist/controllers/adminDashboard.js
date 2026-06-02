@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewExamResults = exports.viewClasses = exports.viewClassesForm = exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = void 0;
+exports.viewClass = exports.viewExamResults = exports.viewClasses = exports.viewClassesForm = exports.viewClassCategories = exports.addClassCategory = exports.classOverview = exports.createClass = exports.adminDashboard = void 0;
 const studentModel_1 = require("../models/studentModel");
 const teacherModel_1 = require("../models/teacherModel");
 const classModel_1 = __importDefault(require("../models/classModel"));
@@ -203,3 +203,19 @@ const viewExamResults = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.viewExamResults = viewExamResults;
+const viewClass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const [classData, students] = yield Promise.all([
+            classModel_1.default.findById(req.query.class),
+            studentModel_1.StudentModel.find({ classData: req.query.class })
+                .sort({ firstName: 1, lastName: 1 })
+                .lean(),
+        ]);
+        res.send({
+            classData,
+            students,
+        });
+    }
+    catch (error) { }
+});
+exports.viewClass = viewClass;

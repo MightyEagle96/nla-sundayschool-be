@@ -24,8 +24,8 @@ export interface AuthenticatedStudent extends Request {
 
 const studentSchema = new Schema<IStudent>(
   {
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    firstName: { type: String, required: true, trim: true, lowercase: true },
+    lastName: { type: String, required: true, trim: true, lowercase: true },
 
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },

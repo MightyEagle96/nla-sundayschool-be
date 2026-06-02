@@ -3,6 +3,7 @@ import {
   addClassCategory,
   adminDashboard,
   createClass,
+  viewClass,
   viewClassCategories,
   viewClasses,
   viewClassesForm,
@@ -16,6 +17,7 @@ adminRouter
   .get("/classcategories", viewClassCategories)
   .post("/addclasscategory", addClassCategory)
   .get("/classes", viewClasses)
-  .get("/classform", viewClassesForm);
+  .get("/classform", viewClassesForm)
+  .get("/viewclass", viewClass);
 
 export default adminRouter;

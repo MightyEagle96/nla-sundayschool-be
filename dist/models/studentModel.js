@@ -16,8 +16,8 @@ exports.StudentModel = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const studentSchema = new mongoose_1.Schema({
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    firstName: { type: String, required: true, trim: true, lowercase: true },
+    lastName: { type: String, required: true, trim: true, lowercase: true },
     isConfirmed: { type: Boolean, default: false },
     phoneNumber: { type: String, required: true, trim: true },
     classCategory: { type: mongoose_1.Schema.Types.ObjectId, ref: "ClassCategory" },

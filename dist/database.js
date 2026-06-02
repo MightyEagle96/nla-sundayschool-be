@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConnectDatabase = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const teacherModel_1 = require("./models/teacherModel");
 dotenv_1.default.config();
 const environment = process.env.NODE_ENV || "development";
 const databaseURI = environment === "production"
@@ -36,7 +37,8 @@ const ConnectDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         isConnected = true;
         console.log("✅ DB connected successfully");
-        //await syncIndexes();
+        //await syncIndexes();s
+        //await normalizeNames();
     }
     catch (err) {
         console.error("❌ DB connection error:", err.message);
@@ -49,3 +51,20 @@ const ConnectDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.ConnectDatabase = ConnectDatabase;
+const normalizeNames = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const docs = yield teacherModel_1.TeacherModel.find({}).lean(false); // ensure mongoose docs
+        for (const doc of docs) {
+            yield teacherModel_1.TeacherModel.updateOne({ _id: doc._id }, {
+                $set: {
+                    firstName: doc.firstName.toLowerCase(),
+                    lastName: doc.lastName.toLowerCase(),
+                },
+            });
+        }
+        console.log("Migration done");
+    }
+    catch (error) {
+        console.error(error.message);
+    }
+});
