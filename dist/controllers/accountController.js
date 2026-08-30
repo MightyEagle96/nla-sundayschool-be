@@ -35,6 +35,12 @@ const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (existingAccount) {
         return res.status(400).send("Phone number already exists");
     }
+    if (!req.body.classCategory) {
+        return res.status(400).send("Class category is required");
+    }
+    if (!req.body.classData) {
+        return res.status(400).send("Class is required");
+    }
     accountQueue.enqueue(() => __awaiter(void 0, void 0, void 0, function* () {
         try {
             yield studentModel_1.StudentModel.create(req.body);

@@ -36,6 +36,14 @@ export const createAccount = async (req: Request, res: Response) => {
     return res.status(400).send("Phone number already exists");
   }
 
+  if (!req.body.classCategory) {
+    return res.status(400).send("Class category is required");
+  }
+
+  if (!req.body.classData) {
+    return res.status(400).send("Class is required");
+  }
+
   accountQueue.enqueue(async () => {
     try {
       await StudentModel.create(req.body);
